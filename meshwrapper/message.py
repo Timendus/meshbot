@@ -1,5 +1,5 @@
 from datetime import datetime
-from .node import Node
+from .node import Node, Everyone
 
 
 class Message:
@@ -9,6 +9,7 @@ class Message:
         self.data = data
 
         self.id = data.get("id")
+        self.channel = int(data.get("channel", 0))
         self.timestamp = datetime.fromtimestamp(data.get("rxTime", 0))
         self.type = self.data.get("decoded", {}).get("portnum")
         self.text = self.data.get("decoded", {}).get("text", "")
@@ -42,16 +43,15 @@ class Message:
             del self.admin["raw"]
 
         self.fromNode = fromNode
-        if toNode:
-            self.toNode = toNode
-        elif data.get("to") == 0xFFFFFFFF:
-            self.toNode = "\033[95mEveryone\033[0m"
-        else:
-            self.toNode = "\033[32mUnknown\033[0m"
+        self.toNode = toNode
 
     def reply(self, message: str, **kwargs):
+        if self.toNode == Everyone:
+            # This was a message in a channel, respond in the same channel
+            return Everyone.send(message, channelIndex=self.channel, **kwargs)
         if self.fromNode:
-            return self.fromNode.send(message, **kwargs)
+            # This was a direct message, respond to the right node
+            return self.fromNode.send(message, channelIndex=self.channel, **kwargs)
         else:
             return False
 

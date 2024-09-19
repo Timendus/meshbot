@@ -1,6 +1,6 @@
 import re
 
-from .node import Node
+from .node import Node, Everyone, Unknown
 
 
 fullHexId = re.compile("![0-9a-fA-F]{8}")
@@ -20,7 +20,12 @@ class Nodelist:
         self.nodes[node.num] = node
 
     def get(self, num) -> Node | None:
-        return self.nodes.get(num, None)
+        """Returns Node object"""
+        if num == 0xFFFFFFFF:
+            return Everyone
+        elif num in self.nodes.keys():
+            return self.nodes[num]
+        return Unknown
 
     def find(self, needle: str) -> Node | None:
         """Figure out which node the user intends. Returns Node object or None"""

@@ -27,7 +27,7 @@ class Node:
         self.isSelf = True
 
     def send(self, message: str, **kwargs):
-        if self.id:
+        if self.id and self.interface:
             print(f"Sending to {self}: {message}")
             self.interface.sendText(message, destinationId=self.id, **kwargs)
             return True
@@ -35,7 +35,9 @@ class Node:
             return False
 
     def __str__(self):
-        if self.isSelf:
+        if type(self) == SpecialNode:
+            color = "95"
+        elif self.isSelf:
             color = "92"
         elif self.hopsAway == 0:
             color = "96"
@@ -60,3 +62,19 @@ class Node:
     def to_succinct_string(self):
         """Use when indentifying this node in Meshtastic messages"""
         return f"[{self.shortName}] {self.longName} ({self.id})"
+
+
+class SpecialNode(Node):
+    def __init__(self, short, long, id):
+        self.shortName = short
+        self.longName = long
+        self.id = id
+        self.interface = None
+        self.hardware = "UNSET"
+        self.isSelf = False
+
+    def mark_as_self(self):
+        pass
+
+Everyone = SpecialNode("CAST", "Everyone", 0xFFFFFFFF)
+Unknown = SpecialNode("UNKN", "Unknown", 0x00000000)

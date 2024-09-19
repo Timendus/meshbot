@@ -2,7 +2,7 @@ import meshtastic
 import meshtastic.tcp_interface
 from pubsub import pub
 
-from .node import Node
+from .node import Node, Everyone
 from .nodelist import Nodelist
 from .message import Message
 
@@ -36,6 +36,8 @@ class MeshtasticClient:
         self._connectedCallback = connected
         self._messageCallback = message
         self._interface = meshtastic.tcp_interface.TCPInterface(hostname=self._hostname)
+
+        Everyone.interface = self._interface
 
     def close(self):
         self.closing = True

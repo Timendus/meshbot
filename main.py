@@ -25,8 +25,18 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
         return
 
     # If someone sends us a direct message that's not handled above, reply
-    if message.type == "TEXT_MESSAGE_APP" and message.toNode.isSelf:
-        message.reply(
+    if message.type != "TEXT_MESSAGE_APP":
+        return
+
+    if message.text.upper().startswith("/ABOUT") or message.text.upper().startswith(
+        "/HELP"
+    ):
+        return message.reply(
+            "🤖👋 Hello! I'm your friendly neighbourhood Meshbot. My code is available at https://github.com/timendus/meshbot. Send me a direct message to see what I can do!"
+        )
+
+    if message.toNode.isSelf:
+        return message.reply(
             """🤖👋 Hey there! Available commands:
 
 - INBOX: Check your inbox
