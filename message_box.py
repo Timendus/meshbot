@@ -15,15 +15,16 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
     if not message.toNode.isSelf:
         return False
 
-    # Give the current user a welcome message if they are new
+    # Give the current user an inbox and a welcome message if they are new
     if message.fromNode.id not in messageStore:
-        messageStore[message.fromNode.id] = []
-        messageStore[message.fromNode.id].append({
-            "sender": "🤖 Meshbot",
-            "contents": f"Welcome to this Meshtastic answering machine, {message.fromNode.longName}! You can leave messages for other users, and they can leave messages for you! Hope you like it 😄",
-            "read": False,
-            "timestamp": datetime.now()
-        })
+        messageStore[message.fromNode.id] = [
+            {
+                "sender": "🤖 Meshbot",
+                "contents": f"Welcome to this Meshtastic answering machine, {message.fromNode.longName}! You can leave messages for other users, and they can leave messages for you! Hope you like it 😄",
+                "read": False,
+                "timestamp": datetime.now(),
+            },
+        ]
 
     # Store new messages
     if message.text.upper().startswith("SEND"):
