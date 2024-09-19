@@ -9,6 +9,10 @@ as a parameter. Can be a hostname or an IP address.
 python3 ./main.py meshtastic.local
 ```
 
+Make sure no other client is communicating with this node, otherwise both
+clients will be missing messages and things will appear to be very broken. So
+disconnect your mobile app and don't make any connections to it.
+
 Serial isn't supported yet, but shouldn't be too hard to add. Same for
 Bluetooth, although I wouldn't know why you would want that 🙂
 
