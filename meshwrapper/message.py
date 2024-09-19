@@ -37,6 +37,10 @@ class Message:
         if "raw" in self.routing:
             del self.routing["raw"]
 
+        self.admin = self.data.get("decoded", {}).get("admin", {})
+        if "raw" in self.admin:
+            del self.admin["raw"]
+
         self.fromNode = fromNode
         if toNode:
             self.toNode = toNode
@@ -66,5 +70,7 @@ class Message:
                 content = f"updated node info to: {self.user}"
             case "ROUTING_APP":
                 content = f"new routing info: {self.routing}"
+            case "ADMIN_APP":
+                content = f"administrating: {self.admin}"
 
         return f"{self.fromNode} --> {self.toNode}: {content}"
