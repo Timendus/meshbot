@@ -19,7 +19,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
     if message.fromNode.id not in messageStore:
         messageStore[message.fromNode.id] = []
         messageStore[message.fromNode.id].append({
-            "sender": "🤖 Answerbot",
+            "sender": "🤖 Meshbot",
             "contents": f"Welcome to this Meshtastic answering machine, {message.fromNode.longName}! You can leave messages for other users, and they can leave messages for you! Hope you like it 😄",
             "read": False,
             "timestamp": datetime.now()

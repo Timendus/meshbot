@@ -13,6 +13,9 @@ Make sure no other client is communicating with this node, otherwise both
 clients will be missing messages and things will appear to be very broken. So
 disconnect your mobile app and don't make any connections to it.
 
+Add a 🤖 emoji to your node name to make it clear to other users that your node
+is a bot.
+
 Serial isn't supported yet, but shouldn't be too hard to add. Same for
 Bluetooth, although I wouldn't know why you would want that 🙂
 
