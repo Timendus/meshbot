@@ -28,9 +28,7 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
     if message.type != "TEXT_MESSAGE_APP":
         return
 
-    if message.text.upper().startswith("/ABOUT") or message.text.upper().startswith(
-        "/HELP"
-    ):
+    if message.text.upper() in ["/ABOUT", "/HELP", "/MESHBOT"]:
         return message.reply(
             "🤖👋 Hello! I'm your friendly neighbourhood Meshbot. My code is available at https://github.com/timendus/meshbot. Send me a direct message to see what I can do!"
         )
