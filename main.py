@@ -1,5 +1,6 @@
 import sys
-from time import sleep
+import time
+import threading
 
 from meshwrapper import MeshtasticClient, Message, MeshtasticConnectionLost
 import message_box
@@ -60,13 +61,37 @@ meshtasticClient = MeshtasticClient(
 )
 
 
+# Output the node list every half hour
+
+
+class setInterval:
+    def __init__(self, interval, action):
+        self.interval = interval
+        self.action = action
+        self.stopEvent = threading.Event()
+        thread = threading.Thread(target=self.__setInterval)
+        thread.start()
+
+    def __setInterval(self):
+        nextTime = time.time() + self.interval
+        while not self.stopEvent.wait(nextTime - time.time()):
+            nextTime += self.interval
+            self.action()
+
+    def cancel(self):
+        self.stopEvent.set()
+
+
+interval = setInterval(30 * 60, lambda: print("\n" + meshtasticClient.nodeList))
+
+
 # Keep the connection open until the user presses Ctrl+C or the device
 # disconnects on the other side
 
 
 try:
     while True:
-        sleep(1)
+        time.sleep(1)
 except KeyboardInterrupt:
     print("Closing connection...")
     meshtasticClient.close()
@@ -74,3 +99,4 @@ except MeshtasticConnectionLost:
     print("Connection lost!")
 finally:
     print("Done!")
+    interval.cancel()
