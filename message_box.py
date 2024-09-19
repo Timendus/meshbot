@@ -66,12 +66,12 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
             if totalMessages == 0:
                 message.reply("🤖📭 You have no messages in your inbox")
             else:
-                message.reply(f"🤖{"📬" if numUnread > 0 else "📭"} You have {numUnread} unread {"message" if numUnread == 1 else "messages"}, and a grand total of {totalMessages} {"message" if totalMessages == 1 else "messages"} in your inbox.")
+                message.reply(f"🤖{"📬" if numUnread > 0 else "📭"} You have {numUnread} unread {"message" if numUnread == 1 else "messages"}, and a grand total of {totalMessages} {"message" if totalMessages == 1 else "messages"} in your inbox. Send `NEW` or `OLD` to fetch your messages.")
 
         case "NEW":
             if numUnread == 0:
                 message.reply("🤖📭 You have no new messages. Send `OLD` to read your older messages.")
-                return
+                return True
             
             message.reply(f"🤖📬 You have {numUnread} new {"message" if numUnread == 1 else "messages"}. Sending {"it" if numUnread == 1 else "them"} now...", wantAck=True)
             for msg in messages:
@@ -82,7 +82,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
         case "OLD":
             if numRead == 0:
                 message.reply("🤖📭 You have no old messages. Send `NEW` to read your new messages.")
-                return
+                return True
             
             message.reply(f"🤖📬 You have {numRead} old {"message" if numRead == 1 else "messages"}. Sending {"it" if numRead == 1 else "them"} now...", wantAck=True)
             for msg in messages:
