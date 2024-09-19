@@ -24,7 +24,18 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
         )
         return True
 
-    message.reply(
-        f"🤖📶 I'm reading {subject.to_succinct_string()} with an SNR of {subject.snr}"
-    )
+    if subject.hopsAway == 0:
+        if subject.snr:
+            message.reply(
+                f"🤖📶 I'm reading {subject.to_succinct_string()} with an SNR of {subject.snr}."
+            )
+        else:
+            message.reply(
+                f"🤖📶 I don't have an SNR reading for {subject.to_succinct_string()}."
+            )
+    else:
+        message.reply(
+            f"🤖📶 {subject.to_succinct_string()} is {subject.hopsAway} {"hop" if subject.hopsAway == 1 else "hops"} away{f", with an SNR of {subject.snr} on the last hop" if subject.snr else ""}."
+        )
+
     return True

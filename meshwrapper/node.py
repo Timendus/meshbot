@@ -21,7 +21,7 @@ class Node:
         self.longName = data.get("user", {}).get("longName", "")
         self.lastHeard = data.get("lastHeard", 0)
         self.hopsAway = data.get("hopsAway", 0)
-        self.snr = data.get("snr", None) if self.hopsAway == 0 else None
+        self.snr = data.get("snr", None)
 
     def mark_as_self(self):
         self.isSelf = True
