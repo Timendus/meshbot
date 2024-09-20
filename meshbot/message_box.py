@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from meshwrapper import MeshtasticClient, Message
-from meshwrapper.time_helper import time_ago
+from .meshwrapper import MeshtasticClient, Message
+from .meshwrapper.time_helper import time_ago
 
 
 messageStore = {}

@@ -5,9 +5,9 @@ import threading
 import logging
 from dotenv import dotenv_values
 
-from meshwrapper import MeshtasticClient, Message, MeshtasticConnectionLost
-import message_box
-import signal_reporter
+from .meshwrapper import MeshtasticClient, Message, MeshtasticConnectionLost
+from .message_box import handle as message_box
+from .signal_reporter import handle as signal_reporter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Meshbot")
@@ -31,9 +31,9 @@ def connectionHandler(meshtasticClient: MeshtasticClient):
 def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
     logger.info(message)  # So we can actually see messages coming in on the terminal
 
-    if signal_reporter.handle(message, meshtasticClient):
+    if signal_reporter(message, meshtasticClient):
         return
-    if message_box.handle(message, meshtasticClient):
+    if message_box(message, meshtasticClient):
         return
 
     # If someone sends us a direct message that's not handled above, reply

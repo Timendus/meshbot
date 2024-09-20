@@ -13,4 +13,4 @@ export-image: build
 	@docker save timendus/meshbot:latest | gzip > meshbot-docker-image.tar.gz
 
 run:
-	@python3 ./main.py
+	@python3 -m meshbot

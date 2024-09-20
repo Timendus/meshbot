@@ -1,4 +1,4 @@
-from meshwrapper import MeshtasticClient, Message
+from .meshwrapper import MeshtasticClient, Message
 
 
 def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
