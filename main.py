@@ -100,7 +100,7 @@ interval = setInterval(30 * 60, lambda: logger.info("\n" + meshtasticClient.node
 
 try:
     while True:
-        time.sleep(1)
+        time.sleep(1000)
 except KeyboardInterrupt:
     logger.info("Closing connection...")
     meshtasticClient.close()
