@@ -91,7 +91,7 @@ class setInterval:
         self.stopEvent.set()
 
 
-interval = setInterval(30 * 60, lambda: logger.info("\n" + meshtasticClient.nodeList))
+interval = setInterval(30 * 60, lambda: logger.info(meshtasticClient.nodeList))
 
 
 # Keep the connection open until the user presses Ctrl+C or the device
