@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 import threading
 import logging
@@ -15,6 +16,7 @@ config = {
     **dotenv_values(".env"),
     **dotenv_values("production.env"),
     **dotenv_values("development.env"),
+    **os.environ,
 }
 
 
@@ -59,7 +61,7 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
 
 # Start the connection to the Meshtastic node
 
-logger.info("Attempting to connect...")
+logger.info(f"Attempting to connect to {config["NODE_HOSTNAME"]}...")
 meshtasticClient = MeshtasticClient(
     config["NODE_HOSTNAME"],
     connected=lambda: connectionHandler(meshtasticClient),
