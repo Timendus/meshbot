@@ -1,7 +1,9 @@
-import meshtastic
-import meshtastic.tcp_interface
 from pubsub import pub
 import logging
+
+import meshtastic
+import meshtastic.tcp_interface
+import meshtastic.serial_interface
 
 from .node import Node, Everyone
 from .nodelist import Nodelist
@@ -19,7 +21,9 @@ class MeshtasticConnectionLost(Exception):
 class MeshtasticClient:
     """The class used to connect your project to a Meshtastic node."""
 
-    def __init__(self, hostname: str, connected=None, message=None, debug=False):
+    def __init__(
+        self, hostname: str, connected=None, message=None, debug=False, serial=False
+    ):
         pub.subscribe(self._on_receive, "meshtastic.receive")
         pub.subscribe(
             self._on_connection_established, "meshtastic.connection.established"
@@ -38,7 +42,13 @@ class MeshtasticClient:
         self._hostname = hostname
         self._connectedCallback = connected
         self._messageCallback = message
-        self._interface = meshtastic.tcp_interface.TCPInterface(hostname=self._hostname)
+
+        if serial:
+            self._interface = meshtastic.serial_interface.SerialInterface()
+        else:
+            self._interface = meshtastic.tcp_interface.TCPInterface(
+                hostname=self._hostname
+            )
 
         Everyone.interface = self._interface
 
