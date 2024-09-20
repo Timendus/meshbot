@@ -2,7 +2,7 @@
 
 A simple bot for use with Meshtastic.
 
-## How to set up
+## Node setup
 
 Connect a Meshtastic node to your network through wifi or ethernet. Make sure no
 other client is communicating with this node, otherwise both clients will be
@@ -14,10 +14,10 @@ Pro-tips on the Meshtastic side:
 - Add a 🤖 emoji to your node name to make it clear to other users that your
   node is a bot.
 - You can add quick chat messages -- at least in the Android Meshtastic app.
-  Adding the commands that the bot accepts make them really easily accessible
-  with one click.
+  Adding the commands that the bot accepts (like `NEW` and `/SIGNAL`) makes them
+  really easily accessible with one click.
 
-Now for running the bot:
+## Bot setup
 
 Copy [`.env`](./.env) to a new file `production.env` in the project root. Store
 the address of the node in this new `production.env` file. The address can be a
@@ -43,14 +43,17 @@ Meshtastic node, and it will reply to you with the available commands.
 
 There is very little bandwidth available on Meshtastic. If you use this bot, and
 especially if you wish to modify it, please make sure it doesn't spam your local
-mesh. Make sure it only speaks when spoken to. Et cetera.
+mesh. Make sure it only speaks when spoken to. Et cetera. Be a good neighbour.
 
 ## Docker
 
+There is a dockerfile available if you wish to run this bot in Docker.
+
 Run `make build` to create the docker image. Run `make run-image` to run locally
-or `make export-image` to build a `.tar.gz` file to run elsewhere. Mount a
-`production.env` file in the project root, or set the environment variable
-`NODE_HOSTNAME` to configure which host to connect to.
+or `make export-image` to build a `.tar.gz` file to run elsewhere.
+
+To configure which host to connect to, either mount a `production.env` file in
+the project root, or set the environment variable `NODE_HOSTNAME`.
 
 The command line way for this is:
 
