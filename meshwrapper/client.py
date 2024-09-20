@@ -1,10 +1,13 @@
 import meshtastic
 import meshtastic.tcp_interface
 from pubsub import pub
+import logging
 
 from .node import Node, Everyone
 from .nodelist import Nodelist
 from .message import Message
+
+logger = logging.getLogger("Meshbot")
 
 
 class MeshtasticConnectionLost(Exception):
@@ -60,7 +63,7 @@ class MeshtasticClient:
     def _on_connection_lost(self, interface, topic=pub.AUTO_TOPIC):
         self.connected = False
         if not self.closing:
-            print("ERROR: Connection to node lost")
+            logger.error("ERROR: Connection to node lost")
             raise MeshtasticConnectionLost("Connection to node was lost")
 
     def _on_node(self, node, interface, topic=pub.AUTO_TOPIC):
@@ -77,6 +80,6 @@ class MeshtasticClient:
 
     def _debug(self, interface=None, *args, **kwargs):
         for arg in args:
-            print("Argument:", arg)
+            logger.debug("Argument:", arg)
         for key, value in kwargs.items():
-            print("Key, value:", key, value)
+            logger.debug("Key, value:", key, value)

@@ -1,4 +1,8 @@
+import logging
+
 from .time_helper import time_ago
+
+logger = logging.getLogger("Meshbot")
 
 
 class Node:
@@ -11,7 +15,7 @@ class Node:
 
         self.num = data.get("num")
         if not self.num:
-            print("ERROR: Node has no ID")
+            logger.error("ERROR: Node has no ID")
             raise Exception("A node should have an ID")
 
         self.id = data.get("user", {}).get("id", "")
@@ -29,7 +33,7 @@ class Node:
 
     def send(self, message: str, **kwargs):
         if self.id and self.interface:
-            print(f"Sending to {self}: {message}")
+            logger.info(f"Sending to {self}: {message}")
             self.interface.sendText(message, destinationId=self.id, **kwargs)
             return True
         else:

@@ -1,23 +1,26 @@
 import sys
 import time
 import threading
+import logging
 
 from meshwrapper import MeshtasticClient, Message, MeshtasticConnectionLost
 import message_box
 import signal_reporter
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("Meshbot")
 
 
 # Define event handlers
 
 
 def connectionHandler(meshtasticClient: MeshtasticClient):
-    print("Connection established!")
-    print("")
-    print(meshtasticClient.nodeList)
+    logger.info("Connection established!")
+    logger.info(meshtasticClient.nodeList)
 
 
 def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
-    print(message)  # So we can actually see messages coming in on the terminal
+    logger.info(message)  # So we can actually see messages coming in on the terminal
 
     if signal_reporter.handle(message, meshtasticClient):
         return
@@ -60,7 +63,7 @@ hostname = sys.argv[len(sys.argv) - 1]
 # Start the connection to the Meshtastic node
 
 
-print("Attempting to connect...")
+logger.info("Attempting to connect...")
 meshtasticClient = MeshtasticClient(
     hostname,
     connected=lambda: connectionHandler(meshtasticClient),
@@ -90,7 +93,7 @@ class setInterval:
         self.stopEvent.set()
 
 
-interval = setInterval(30 * 60, lambda: print("\n" + meshtasticClient.nodeList))
+interval = setInterval(30 * 60, lambda: logger.info("\n" + meshtasticClient.nodeList))
 
 
 # Keep the connection open until the user presses Ctrl+C or the device
@@ -101,10 +104,10 @@ try:
     while True:
         time.sleep(1)
 except KeyboardInterrupt:
-    print("Closing connection...")
+    logger.info("Closing connection...")
     meshtasticClient.close()
 except MeshtasticConnectionLost:
-    print("Connection lost!")
+    logger.error("Connection lost!")
 finally:
-    print("Done!")
+    logger.info("Done!")
     interval.cancel()
