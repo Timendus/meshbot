@@ -2,6 +2,9 @@
 
 A simple bot for use with Meshtastic.
 
+![A screenshot of the Meshtastic app in a conversation with
+Meshbot](./screenshot.jpeg)
+
 ## Node setup
 
 Connect a Meshtastic node to your network through wifi or ethernet. Make sure no
