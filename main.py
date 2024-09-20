@@ -2,6 +2,7 @@ import sys
 import time
 import threading
 import logging
+from dotenv import dotenv_values
 
 from meshwrapper import MeshtasticClient, Message, MeshtasticConnectionLost
 import message_box
@@ -9,6 +10,12 @@ import signal_reporter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Meshbot")
+
+config = {
+    **dotenv_values(".env"),
+    **dotenv_values("production.env"),
+    **dotenv_values("development.env"),
+}
 
 
 # Define event handlers
@@ -50,22 +57,11 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
         )
 
 
-# Find hostname parameter
-
-
-if len(sys.argv) < 2:
-    print(f"Usage: {sys.argv[0]} <hostname or IP>")
-    sys.exit(1)
-
-hostname = sys.argv[len(sys.argv) - 1]
-
-
 # Start the connection to the Meshtastic node
-
 
 logger.info("Attempting to connect...")
 meshtasticClient = MeshtasticClient(
-    hostname,
+    config["NODE_HOSTNAME"],
     connected=lambda: connectionHandler(meshtasticClient),
     message=lambda message: messageHandler(message, meshtasticClient),
     debug=False,
