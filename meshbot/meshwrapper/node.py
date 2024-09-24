@@ -1,8 +1,20 @@
 import logging
+import textwrap
 
 from .time_helper import time_ago
 
 logger = logging.getLogger("Meshbot")
+
+# Maximum size of a message in UTF-8 bytes that we can send
+MAX_SIZE = 234
+
+# Size minus `len(" [i/n]")`.
+# Note: if we have to split into more than 9 messages, this does break.
+SHORT_SIZE = MAX_SIZE - 6
+
+wrapper = textwrap.TextWrapper(
+    width=SHORT_SIZE, replace_whitespace=False, break_long_words=True
+)
 
 
 class Node:
@@ -38,10 +50,33 @@ class Node:
     def send(self, message: str, **kwargs):
         if self.id and self.interface:
             logger.info(f"Sending to {self}: {message}")
-            self.interface.sendText(message, destinationId=self.id, **kwargs)
+            for msg in self.break_message(message):
+                self.interface.sendText(msg, destinationId=self.id, **kwargs)
             return True
         else:
             return False
+
+    def break_message(self, message: str):
+        # Keep it as a single message if possible
+        if len(message.encode("utf-8")) <= MAX_SIZE:
+            return [message]
+
+        # Split message into multiple parts
+        words = wrapper._split_chunks(message)
+        words.reverse()  # use it as a stack
+        words = [w.encode("utf-8") for w in words]
+        lines = [b""]
+        while words:
+            word = words.pop(-1)
+            if len(word) > SHORT_SIZE:
+                assert False, "we should never be here if the wrapper does its job"
+            if len(lines[-1]) + len(word) <= SHORT_SIZE:
+                lines[-1] += word
+            else:
+                lines.append(word)
+        return [
+            f"{l.decode().rstrip()} [{i+1}/{len(lines)}]" for i, l in enumerate(lines)
+        ]
 
     def __str__(self):
         if type(self) == SpecialNode:
