@@ -15,8 +15,8 @@ connections to it while the bot is running.
 
 Pro-tips on the Meshtastic side:
 
-- Add a 🤖 emoji to your node name to make it clear to other users that your
-  node is a bot.
+- Add a robot emoji (🤖) to your node name to make it clear to other users that
+  your node is a bot.
 - You can add quick chat messages -- at least in the Android Meshtastic app.
   Adding the commands that the bot accepts (like `NEW` and `/SIGNAL`) as quick
   messages makes them really easily accessible with one click.
