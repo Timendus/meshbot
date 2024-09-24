@@ -7,33 +7,33 @@ Meshbot](./screenshot.jpeg)
 
 ## Node setup
 
-Connect a Meshtastic node to your network through wifi or ethernet. Make sure no
-other client is communicating with this node, otherwise both clients will be
-missing messages and things will appear to be very broken. So disconnect your
-mobile app and don't make any connections to it while the bot is running.
+Connect a Meshtastic node to your computer over serial or to your network
+through wifi or ethernet. Make sure no other client is communicating with this
+node, otherwise both clients will be missing messages and things will appear to
+be very broken. So disconnect your mobile app and don't make any other
+connections to it while the bot is running.
 
 Pro-tips on the Meshtastic side:
 
 - Add a 🤖 emoji to your node name to make it clear to other users that your
   node is a bot.
 - You can add quick chat messages -- at least in the Android Meshtastic app.
-  Adding the commands that the bot accepts (like `NEW` and `/SIGNAL`) makes them
-  really easily accessible with one click.
+  Adding the commands that the bot accepts (like `NEW` and `/SIGNAL`) as quick
+  messages makes them really easily accessible with one click.
 
 ## Bot setup
 
-Copy [`.env`](./.env) to a new file `production.env` in the project root. Store
-the address of the node in this new `production.env` file. The address can be a
-hostname or an IP address. Then, from the project root, run:
+Copy [`.env`](./.env) to a new file `production.env` in the project root. Edit
+the `production.env` file to match your connection settings. Then, from the
+project root, run:
 
 ```bash
+make dependencies
 make
 ```
 
-This will run the bot locally and have it connect to the address you specified.
-
-Serial isn't supported yet, but shouldn't be too hard to add. Same for
-Bluetooth, although I wouldn't know why you would want that 🙂
+This will install the dependencies, run the bot and have it connect to the
+address or device you specified in `production.env`.
 
 ## Usage
 
@@ -56,10 +56,11 @@ Run `make build` to create the docker image. Run `make run-image` to run locally
 or `make export-image` to build a `.tar.gz` file to run elsewhere.
 
 To configure which host to connect to, either mount a `production.env` file in
-the project root, or set the environment variable `NODE_HOSTNAME`.
+the project root, or set environment variables to match the settings in
+`production.env`.
 
 The command line way for this is:
 
 ```bash
-docker run --name=meshbot --env=NODE_HOSTNAME=meshtastic.local -d timendus/meshbot
+docker run --name=meshbot --env=DEVICE=/dev/ttyUSB0 -d timendus/meshbot
 ```

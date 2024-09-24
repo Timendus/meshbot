@@ -1,5 +1,5 @@
 FROM python:latest
 LABEL Maintainer="Timendus"
 COPY . .
-RUN pip install python-dotenv pytap2 meshtastic
+RUN pip3 install -r requirements.txt
 CMD [ "python3", "-m", "meshbot" ]

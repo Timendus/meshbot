@@ -1,4 +1,5 @@
 from pubsub import pub
+from typing import Callable
 import logging
 
 import meshtastic
@@ -22,7 +23,12 @@ class MeshtasticClient:
     """The class used to connect your project to a Meshtastic node."""
 
     def __init__(
-        self, hostname: str, connected=None, message=None, debug=False, serial=False
+        self,
+        hostname: str = None,
+        device: str = None,
+        connected: Callable[[], None] = None,
+        message: Callable[[Message], None] = None,
+        debug: bool = False,
     ):
         pub.subscribe(self._on_receive, "meshtastic.receive")
         pub.subscribe(
@@ -39,15 +45,14 @@ class MeshtasticClient:
         self.nodeList = Nodelist()
 
         self._myNodeNum = None
-        self._hostname = hostname
         self._connectedCallback = connected
         self._messageCallback = message
 
-        if serial:
-            self._interface = meshtastic.serial_interface.SerialInterface()
+        if hostname:
+            self._interface = meshtastic.tcp_interface.TCPInterface(hostname=hostname)
         else:
-            self._interface = meshtastic.tcp_interface.TCPInterface(
-                hostname=self._hostname
+            self._interface = meshtastic.serial_interface.SerialInterface(
+                devPath=device
             )
 
         Everyone.interface = self._interface

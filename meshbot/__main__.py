@@ -61,14 +61,30 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
 
 # Start the connection to the Meshtastic node
 
-logger.info(f"Attempting to connect to {config["NODE_HOSTNAME"]}...")
-meshtasticClient = MeshtasticClient(
-    config["NODE_HOSTNAME"],
-    connected=lambda: connectionHandler(meshtasticClient),
-    message=lambda message: messageHandler(message, meshtasticClient),
-    debug=False,
-)
+DEBUG = False
 
+if config["TRANSPORT"] == "serial":
+    if config["DEVICE"] == "detect":
+        logger.info("Trying to find serial device...")
+    else:
+        logger.info(f"Attempting to open serial connection on {config['DEVICE']}...")
+    meshtasticClient = MeshtasticClient(
+        device=None if config["DEVICE"] == "detect" else config["DEVICE"],
+        connected=lambda: connectionHandler(meshtasticClient),
+        message=lambda message: messageHandler(message, meshtasticClient),
+        debug=DEBUG,
+    )
+elif config["TRANSPORT"] == "net":
+    host = "meshtastic.local" if config["DEVICE"] == "detect" else config["DEVICE"]
+    logger.info(f"Attempting to connect to {host}...")
+    meshtasticClient = MeshtasticClient(
+        hostname=host,
+        connected=lambda: connectionHandler(meshtasticClient),
+        message=lambda message: messageHandler(message, meshtasticClient),
+        debug=DEBUG,
+    )
+else:
+    raise Exception(f"Unknown transport: {config['TRANSPORT']}")
 
 # Output the node list every half hour
 

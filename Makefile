@@ -1,4 +1,12 @@
+SHELL := /bin/bash
+
 all: run
+
+create-virtual-env:
+	@python3 -m venv ./.venv
+
+use-virtual-env:
+	@source .venv/bin/activate
 
 build:
 	@echo "Building docker image..."
@@ -12,5 +20,8 @@ export-image: build
 	@echo "Exporting docker image..."
 	@docker save timendus/meshbot:latest | gzip > meshbot-docker-image.tar.gz
 
-run:
+dependencies: create-virtual-env use-virtual-env
+	@pip3 install -r requirements.txt
+
+run: use-virtual-env
 	@python3 -m meshbot
