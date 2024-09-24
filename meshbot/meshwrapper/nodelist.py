@@ -69,3 +69,7 @@ class Nodelist:
         for node in nodes:
             output += f"{node.to_verbose_string()}\n"
         return output
+
+    def to_succinct_string(self):
+        """Used when sending the node list in Meshtastic messages"""
+        return "\n".join(node.to_succinct_string() for node in self.nodes.values())

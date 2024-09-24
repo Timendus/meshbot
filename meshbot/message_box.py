@@ -120,7 +120,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
             )
 
         case "NODES":
-            message.reply(meshtasticClient.nodeList.to_minimal_string())
+            message.reply(meshtasticClient.nodelist().to_succinct_string())
 
         case _:
             return False
