@@ -46,15 +46,26 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
         )
 
     if message.toNode.is_self():
-        return message.reply(
-            """🤖👋 Hey there! Available commands:
+        message.reply(
+            """🤖👋 Hey there! I understand these message box commands:
 
 - INBOX: Check your inbox
 - NEW: Get new messages
 - OLD: Get old messages
 - CLEAR: Clear old messages
 - SEND <id> <message>: Leave a message
-- /SIGNAL [<id>]: Get signal report
+
+[1/2]
+"""
+        )
+        message.reply(
+            """As well as these slash commands:
+
+- /NODES: Get a summary of nodes
+- /NODELIST: Get a list of the nodes I see
+- /SIGNAL [<id>]: Get signal report on a node
+
+[2/2]
 """
         )
 
