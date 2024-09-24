@@ -33,10 +33,6 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
             send_old_messages(message.fromNode)
         case "CLEAR":
             clear_old_messages(message.fromNode)
-        case "NODES":
-            message.reply(
-                f"🤖👀 I've seen these nodes:\n\n{meshtasticClient.nodelist().to_succinct_string()}"
-            )
         case _:
             return False
 

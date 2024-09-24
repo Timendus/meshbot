@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from .node import Node, Everyone, Unknown
 
@@ -73,3 +74,36 @@ class Nodelist:
     def to_succinct_string(self):
         """Used when sending the node list in Meshtastic messages"""
         return "\n".join(node.to_succinct_string() for node in self.nodes.values())
+
+    def summary(self):
+        now = datetime.now()
+        seen_in_the_last_half_hour = [
+            node
+            for node in self.nodes.values()
+            if not node.is_self()
+            and node.lastHeard
+            and (now - datetime.fromtimestamp(node.lastHeard)).total_seconds() < 1800
+        ]
+
+        hop_counts = {}
+        for node in self.nodes.values():
+            if not node.is_self():
+                hop_counts[node.hopsAway] = hop_counts.get(node.hopsAway, 0) + 1
+
+        recent_hop_counts = {}
+        for node in seen_in_the_last_half_hour:
+            recent_hop_counts[node.hopsAway] = (
+                recent_hop_counts.get(node.hopsAway, 0) + 1
+            )
+
+        optional_part = (
+            f" Of which {recent_hop_counts.get(0, 0)} directly connected and {recent_hop_counts.get(1, 0)} one hop away."
+            if len(seen_in_the_last_half_hour) > 0
+            else ""
+        )
+        totals_part = (
+            f"\n\nIn total I've seen {len(self.nodes)} nodes. {hop_counts.get(0, 0)} of those were directly connected and {hop_counts.get(1, 0)} were one hop away."
+            if len(self.nodes) != len(seen_in_the_last_half_hour)
+            else ""
+        )
+        return f"I've seen {len(seen_in_the_last_half_hour)} nodes in the past 30 minutes.{optional_part}{totals_part}"

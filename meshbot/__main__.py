@@ -7,7 +7,7 @@ from dotenv import dotenv_values
 
 from .meshwrapper import MeshtasticClient, Message, MeshtasticConnectionLost
 from .message_box import handle as message_box
-from .signal_reporter import handle as signal_reporter
+from .radio_commands import handle as radio_commands
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Meshbot")
@@ -31,7 +31,7 @@ def connectionHandler(meshtasticClient: MeshtasticClient):
 def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
     logger.info(message)  # So we can actually see messages coming in on the terminal
 
-    if signal_reporter(message, meshtasticClient):
+    if radio_commands(message, meshtasticClient):
         return
     if message_box(message, meshtasticClient):
         return
