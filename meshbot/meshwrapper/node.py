@@ -156,6 +156,7 @@ class SpecialNode(Node):
         self.id = id
         self.interface = None
         self.hardware = "UNSET"
+        self.sending = False
 
     def is_self(self):
         return False
