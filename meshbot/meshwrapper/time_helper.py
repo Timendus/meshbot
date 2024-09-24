@@ -4,6 +4,8 @@ import math
 
 def time_ago(timestamp):
     now = datetime.now()
+    if timestamp == None:
+        return "an unknown amount of time"
     if type(timestamp) != datetime:
         timestamp = datetime.fromtimestamp(timestamp)
     seconds = math.floor((now - timestamp).total_seconds())
