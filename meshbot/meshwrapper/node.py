@@ -21,8 +21,12 @@ class Node:
         self.id = data.get("user", {}).get("id", "")
         self.mac = data.get("user", {}).get("macaddr", "")
         self.hardware = data.get("user", {}).get("hwModel", "")
-        self.shortName = data.get("user", {}).get("shortName", "") if self.mac else "UNKN"
-        self.longName = data.get("user", {}).get("longName", "") if self.mac else "Unknown node"
+        self.shortName = (
+            data.get("user", {}).get("shortName", "") if self.mac else "UNKN"
+        )
+        self.longName = (
+            data.get("user", {}).get("longName", "") if self.mac else "Unknown node"
+        )
         self.role = data.get("user", {}).get("role", None)
         self.lastHeard = data.get("lastHeard", 0)
         self.hopsAway = data.get("hopsAway", 0)
@@ -62,7 +66,11 @@ class Node:
         hardware = f"{self.hardware}, " if self.hardware != "UNSET" else ""
         role = f"{self.role}, " if self.role else ""
         snr = f", SNR {self.snr:.2f}" if self.snr else ""
-        hops = f", {self.hopsAway} {"hop" if self.hopsAway == 1 else "hops"} away" if self.hopsAway > 0 else ""
+        hops = (
+            f", {self.hopsAway} {'hop' if self.hopsAway == 1 else 'hops'} away"
+            if self.hopsAway > 0
+            else ""
+        )
         return f"{str(self)} \033[90m({hardware}{role}last heard {time_ago(self.lastHeard)} ago{snr}{hops})\033[0m"
 
     def to_succinct_string(self):
@@ -81,6 +89,7 @@ class SpecialNode(Node):
 
     def mark_as_self(self):
         pass
+
 
 Everyone = SpecialNode("CAST", "Everyone", 0xFFFFFFFF)
 Unknown = SpecialNode("UNKN", "Unknown", 0x00000000)

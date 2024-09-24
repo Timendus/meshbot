@@ -39,18 +39,22 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
         id = parts[1]
         recipientId = meshtasticClient.nodeList.find_id(id)
         if not recipientId:
-            message.reply("🤖🧨 I don't know who that is. The message was not stored.\n\nI need the short name of a node I have seen before (example: TDRP), or the node ID of the recipient (example: !8e92a31f).")
+            message.reply(
+                "🤖🧨 I don't know who that is. The message was not stored.\n\nI need the short name of a node I have seen before (example: TDRP), or the node ID of the recipient (example: !8e92a31f)."
+            )
             return True
-        
+
         # Store the message
         if recipientId not in messageStore:
             messageStore[recipientId] = []
-        messageStore[recipientId].append({
-            "sender": message.fromNode.to_succinct_string(),
-            "contents": msg,
-            "read": False,
-            "timestamp": datetime.now()
-        })
+        messageStore[recipientId].append(
+            {
+                "sender": message.fromNode.to_succinct_string(),
+                "contents": msg,
+                "read": False,
+                "timestamp": datetime.now(),
+            }
+        )
         message.reply(f"🤖📨 Saved this message for node `{id}`:\n\n{msg}")
         return True
 
@@ -67,32 +71,53 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
             if totalMessages == 0:
                 message.reply("🤖📭 You have no messages in your inbox")
             else:
-                message.reply(f"🤖{"📬" if numUnread > 0 else "📭"} You have {numUnread} unread {"message" if numUnread == 1 else "messages"}, and a grand total of {totalMessages} {"message" if totalMessages == 1 else "messages"} in your inbox. Send `NEW` or `OLD` to fetch your messages.")
+                icon = "📬" if numUnread > 0 else "📭"
+                message.reply(
+                    f"🤖{icon} You have {numUnread} unread {'message' if numUnread == 1 else 'messages'}, and a grand total of {totalMessages} {'message' if totalMessages == 1 else 'messages'} in your inbox. Send `NEW` or `OLD` to fetch your messages."
+                )
 
         case "NEW":
             if numUnread == 0:
-                message.reply("🤖📭 You have no new messages. Send `OLD` to read your older messages.")
+                message.reply(
+                    "🤖📭 You have no new messages. Send `OLD` to read your older messages."
+                )
                 return True
-            
-            message.reply(f"🤖📬 You have {numUnread} new {"message" if numUnread == 1 else "messages"}. Sending {"it" if numUnread == 1 else "them"} now...", wantAck=True)
+
+            message.reply(
+                f"🤖📬 You have {numUnread} new {'message' if numUnread == 1 else 'messages'}. Sending {'it' if numUnread == 1 else 'them'} now...",
+                wantAck=True,
+            )
             for msg in messages:
                 if not msg["read"]:
                     msg["read"] = True
-                    message.reply(f"🤖✉️ From {msg["sender"]}, {time_ago(msg["timestamp"])} ago:\n\n{msg["contents"]}")
+                    message.reply(
+                        f"🤖✉️ From {msg['sender']}, {time_ago(msg['timestamp'])} ago:\n\n{msg['contents']}"
+                    )
 
         case "OLD":
             if numRead == 0:
-                message.reply("🤖📭 You have no old messages. Send `NEW` to read your new messages.")
+                message.reply(
+                    "🤖📭 You have no old messages. Send `NEW` to read your new messages."
+                )
                 return True
-            
-            message.reply(f"🤖📬 You have {numRead} old {"message" if numRead == 1 else "messages"}. Sending {"it" if numRead == 1 else "them"} now...", wantAck=True)
+
+            message.reply(
+                f"🤖📬 You have {numRead} old {'message' if numRead == 1 else 'messages'}. Sending {'it' if numRead == 1 else 'them'} now...",
+                wantAck=True,
+            )
             for msg in messages:
                 if msg["read"]:
-                    message.reply(f"🤖✉️ From {msg["sender"]}, {time_ago(msg["timestamp"])} ago:\n\n{msg["contents"]}")
+                    message.reply(
+                        f"🤖✉️ From {msg['sender']}, {time_ago(msg['timestamp'])} ago:\n\n{msg['contents']}"
+                    )
 
         case "CLEAR":
-            messageStore[message.fromNode.id] = [msg for msg in messageStore[message.fromNode.id] if not msg["read"]]
-            message.reply(f"🤖🗑️ I removed {numRead} old {"message" if numRead == 1 else "messages"}. You have {numUnread} new {"message" if numUnread == 1 else "messages"} left in your inbox.")
+            messageStore[message.fromNode.id] = [
+                msg for msg in messageStore[message.fromNode.id] if not msg["read"]
+            ]
+            message.reply(
+                f"🤖🗑️ I removed {numRead} old {'message' if numRead == 1 else 'messages'}. You have {numUnread} new {'message' if numUnread == 1 else 'messages'} left in your inbox."
+            )
 
         case "NODES":
             message.reply(meshtasticClient.nodeList.to_minimal_string())
