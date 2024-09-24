@@ -32,8 +32,8 @@ make dependencies
 make
 ```
 
-This will install the dependencies, run the bot and have it connect to the
-address or device you specified in `production.env`.
+This will install the dependencies in a new virtual environment, run the bot and
+have it connect to the address or device you specified in `production.env`.
 
 ## Usage
 
