@@ -72,5 +72,7 @@ class Message:
                 content = f"new routing info: {self.routing}"
             case "ADMIN_APP":
                 content = f"administrating: {self.admin}"
+            case "TRACEROUTE_APP":
+                content = f"traceroute request"
 
         return f"{self.fromNode} --> {self.toNode}: {content}"
