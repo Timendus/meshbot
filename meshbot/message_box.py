@@ -118,7 +118,9 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
             )
 
         case "NODES":
-            message.reply(meshtasticClient.nodelist().to_succinct_string())
+            message.reply(
+                f"🤖👀 I've seen these nodes:\n\n{meshtasticClient.nodelist().to_succinct_string()}"
+            )
 
         case _:
             return False
