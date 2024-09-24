@@ -1,10 +1,14 @@
 import logging
 import textwrap
 import time
+from threading import Timer
 
 from .time_helper import time_ago
 
 logger = logging.getLogger("Meshbot")
+
+# Message reply timeout delay before we give up
+MAX_REPLY_DELAY = 5
 
 # Maximum size of a message in UTF-8 bytes that we can send
 MAX_SIZE = 234
@@ -64,6 +68,8 @@ class Node:
     def _send(self, message: str, **kwargs):
         while self.sending:
             time.sleep(0.1)
+        self._timeout = Timer(MAX_REPLY_DELAY, self.on_timeout)
+        self._timeout.start()
         self.sending = self.interface.sendText(
             message,
             destinationId=self.id,
@@ -77,7 +83,14 @@ class Node:
     def onAckNak(self, response):
         if self.sending.id == response["decoded"]["requestId"]:
             # Got a reply to the blocking message! Unblocking...
+            self._timeout.cancel()
             self.sending = False
+
+    def on_timeout(self):
+        logger.info(
+            f"Did not get a reply from {self} within {MAX_REPLY_DELAY} seconds, moving on"
+        )
+        self.sending = False
 
     def break_message(self, message: str):
         # Keep it as a single message if possible
