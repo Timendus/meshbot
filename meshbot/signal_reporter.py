@@ -16,7 +16,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
         subject = message.fromNode
     else:
         # Send a signal report on the specified node
-        subject = meshtasticClient.nodeList.find(" ".join(parts[1:]))
+        subject = meshtasticClient.nodelist().find(" ".join(parts[1:]))
 
     if not subject:
         message.reply(

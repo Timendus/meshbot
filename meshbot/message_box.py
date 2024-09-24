@@ -12,7 +12,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
     if message.type != "TEXT_MESSAGE_APP":
         return False
     # Only reply if the message is sent to us
-    if not message.toNode.isSelf:
+    if not message.toNode.is_self():
         return False
 
     # Give the current user an inbox and a welcome message if they are new
@@ -37,7 +37,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
 
         # Figure out who the recipient is
         id = parts[1]
-        recipientId = meshtasticClient.nodeList.find_id(id)
+        recipientId = meshtasticClient.nodelist().find_id(id)
         if not recipientId:
             message.reply(
                 "🤖🧨 I don't know who that is. The message was not stored.\n\nI need the short name of a node I have seen before (example: TDRP), or the node ID of the recipient (example: !8e92a31f)."

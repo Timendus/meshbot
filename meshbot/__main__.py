@@ -25,7 +25,7 @@ config = {
 
 def connectionHandler(meshtasticClient: MeshtasticClient):
     logger.info("Connection established!")
-    logger.info(meshtasticClient.nodeList)
+    logger.info(meshtasticClient.nodelist())
 
 
 def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
@@ -45,7 +45,7 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
             "🤖👋 Hello! I'm your friendly neighbourhood Meshbot. My code is available at https://github.com/timendus/meshbot. Send me a direct message to see what I can do!"
         )
 
-    if message.toNode.isSelf:
+    if message.toNode.is_self():
         return message.reply(
             """🤖👋 Hey there! Available commands:
 
@@ -107,7 +107,7 @@ class setInterval:
         self.stopEvent.set()
 
 
-interval = setInterval(30 * 60, lambda: logger.info(meshtasticClient.nodeList))
+interval = setInterval(30 * 60, lambda: logger.info(meshtasticClient.nodelist()))
 
 
 # Keep the connection open until the user presses Ctrl+C or the device

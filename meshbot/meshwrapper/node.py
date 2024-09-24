@@ -23,7 +23,6 @@ class Node:
     def __init__(self, data, interface):
         self.data = data
         self.interface = interface
-        self.isSelf = False
 
         self.num = data.get("num")
         if not self.num:
@@ -44,8 +43,8 @@ class Node:
         self.hopsAway = data.get("hopsAway", 0)
         self.snr = data.get("snr", None)
 
-    def mark_as_self(self):
-        self.isSelf = True
+    def is_self(self):
+        return self.num == self.interface.myInfo.my_node_num
 
     def send(self, message: str, **kwargs):
         if self.id and self.interface:
@@ -81,7 +80,7 @@ class Node:
     def __str__(self):
         if type(self) == SpecialNode:
             color = "95"
-        elif self.isSelf:
+        elif self.is_self():
             color = "92"
         elif self.hopsAway == 0:
             color = "96"
@@ -120,10 +119,9 @@ class SpecialNode(Node):
         self.id = id
         self.interface = None
         self.hardware = "UNSET"
-        self.isSelf = False
 
-    def mark_as_self(self):
-        pass
+    def is_self(self):
+        return False
 
 
 Everyone = SpecialNode("CAST", "Everyone", 0xFFFFFFFF)
