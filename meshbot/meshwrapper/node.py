@@ -1,5 +1,6 @@
 import logging
 import textwrap
+import time
 
 from .time_helper import time_ago
 
@@ -23,6 +24,7 @@ class Node:
     def __init__(self, data, interface):
         self.data = data
         self.interface = interface
+        self.sending = False
 
         self.num = data.get("num")
         if not self.num:
@@ -54,10 +56,28 @@ class Node:
                 f"Sending to {self} in {len(messages)} {'part' if len(messages) == 1 else 'parts'}: {oneliner}"
             )
             for msg in messages:
-                self.interface.sendText(msg, destinationId=self.id, **kwargs)
+                self._send(msg, **kwargs)
             return True
         else:
             return False
+
+    def _send(self, message: str, **kwargs):
+        while self.sending:
+            time.sleep(0.1)
+        self.sending = self.interface.sendText(
+            message,
+            destinationId=self.id,
+            wantAck=True,
+            onResponse=self.onAckNak,
+            **kwargs,
+        )
+
+    # Don't change the name of this callback
+    # https://github.com/meshtastic/python/blob/c696d59b9052361856630c8eb97a061cdb51dc6b/meshtastic/mesh_interface.py#L415-L418
+    def onAckNak(self, response):
+        if self.sending.id == response["decoded"]["requestId"]:
+            # Got a reply to the blocking message! Unblocking...
+            self.sending = False
 
     def break_message(self, message: str):
         # Keep it as a single message if possible

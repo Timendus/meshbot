@@ -84,8 +84,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
                 return True
 
             message.reply(
-                f"🤖📬 You have {numUnread} new {'message' if numUnread == 1 else 'messages'}. Sending {'it' if numUnread == 1 else 'them'} now...",
-                wantAck=True,
+                f"🤖📬 You have {numUnread} new {'message' if numUnread == 1 else 'messages'}. Sending {'it' if numUnread == 1 else 'them'} now..."
             )
             for msg in messages:
                 if not msg["read"]:
@@ -102,8 +101,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
                 return True
 
             message.reply(
-                f"🤖📬 You have {numRead} old {'message' if numRead == 1 else 'messages'}. Sending {'it' if numRead == 1 else 'them'} now...",
-                wantAck=True,
+                f"🤖📬 You have {numRead} old {'message' if numRead == 1 else 'messages'}. Sending {'it' if numRead == 1 else 'them'} now..."
             )
             for msg in messages:
                 if msg["read"]:
