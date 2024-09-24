@@ -81,7 +81,7 @@ class Node:
     # Don't change the name of this callback
     # https://github.com/meshtastic/python/blob/c696d59b9052361856630c8eb97a061cdb51dc6b/meshtastic/mesh_interface.py#L415-L418
     def onAckNak(self, response):
-        if self.sending.id == response["decoded"]["requestId"]:
+        if self.sending and self.sending.id == response["decoded"]["requestId"]:
             # Got a reply to the blocking message! Unblocking...
             self._timeout.cancel()
             self.sending = False
