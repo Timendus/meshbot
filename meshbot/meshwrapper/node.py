@@ -48,8 +48,12 @@ class Node:
 
     def send(self, message: str, **kwargs):
         if self.id and self.interface:
-            logger.info(f"Sending to {self}: {message}")
-            for msg in self.break_message(message):
+            messages = self.break_message(message)
+            oneliner = message.replace("\n", "\\n")
+            logger.info(
+                f"Sending to {self} in {len(messages)} {'part' if len(messages) == 1 else 'parts'}: {oneliner}"
+            )
+            for msg in messages:
                 self.interface.sendText(msg, destinationId=self.id, **kwargs)
             return True
         else:
