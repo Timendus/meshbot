@@ -13,9 +13,8 @@ config = {
 
 system_prompt = f"""
 You are Meshbot, a helpful chatbot on the Meshtastic network. You talk a bit
-like a radio HAM. The primary language of this part of the network is
-{config["OLLAMA_LANGUAGE"]}. But users can talk to you in any language. Just be
-kind and reply in the same language.
+like a radio HAM. Users can talk to you in any language. Just be kind and reply
+in the same language if you can.
 
 Remember that Meshtastic is unlicensed and does not use call signs. Also
 remember that Meshtastic uses the LoRa protocol, which can work reliably with
@@ -44,10 +43,10 @@ question or you are quite sure you are not being addressed, just say nothing by
 answering with the string "NOTHING". Only "NOTHING", no more. If you are talking
 one-on-one you are always expected to reply.
 
-Do not hallucinate things, only use the information below when answering
-specific questions. Otherwise just answer that you do not know, or that you do
-not know what to say. Feel free to talk generally about unrelated topics when
-asked.
+Do not hallucinate things, only use the information below and the available
+tools/functions that you can call when answering specific questions. Otherwise
+just answer that you do not know, or that you do not know what to say. Feel free
+to talk generally about unrelated topics when asked.
 
 Information:
 
@@ -58,7 +57,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_signal_strength",
-            "description": "Get the signal strength for a node",
+            "description": "Get the signal strength for a node, in SNR and RSSI if available",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -75,7 +74,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_hops",
-            "description": "Get the number of hops for a node",
+            "description": "Get the number of hops to reach a node in the mesh network",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -91,13 +90,9 @@ tools = [
 ]
 
 conversations = {}
-client = None
 
 
 def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
-    # Store for later use
-    client = meshtasticClient
-
     # Only reply to text messages
     if message.type != "TEXT_MESSAGE_APP":
         return False
@@ -140,7 +135,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
                 "content": f"Node {message.fromNode.id} says: {message.text}",
             }
         )
-        reply = reply_from_ollama(conversations[identifier])
+        reply = reply_from_ollama(conversations[identifier], meshtasticClient)
         if reply != "" and reply != "NOTHING":
             message.reply("🤖 " + reply)
         return True
@@ -154,7 +149,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
                 + str(gather_relevant_stats(message, meshtasticClient)),
             }
         ]
-        reply = reply_from_ollama(conversations[identifier])
+        reply = reply_from_ollama(conversations[identifier], meshtasticClient)
         message.reply("🤖🧠 Started LLM conversation")
         if reply != "" and reply != "NOTHING":
             message.reply("🤖 " + reply)
@@ -163,7 +158,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
     return False
 
 
-def reply_from_ollama(conversation: list):
+def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
     request = {
         "model": config["OLLAMA_MODEL"],
         "messages": conversation,
@@ -178,40 +173,50 @@ def reply_from_ollama(conversation: list):
         except ConnectionError:
             return f"Could not reach the Ollama server at this time."
         if not result.ok:
-            return f"Did not get a valid result from Ollama :/ Status: {result.status_code}"
+            return f"Did not get a valid result from Ollama :/ Status: {result.status_code} - {result.text}"
 
         result = result.json()
         tool_calls = result.get("message", {}).get("tool_calls", False)
 
         if tool_calls:
-            print("tool call!")
-            print(tool_calls)
+            print("Tool call! " + str(tool_calls))
             for call in tool_calls:
                 function = call.get("function", {})
                 arguments = function.get("arguments", {})
+                node = meshtasticClient.nodelist().find(arguments.get("node", ""))
+                assert node, "The tool should have been called with a node parameter"
                 match function.get("name", None):
                     case "get_signal_strength":
-                        return_value = get_signal_strength(**arguments)
+                        return_value = str(
+                            {
+                                "snr": node.snr,
+                                "rssi": node.rssi,
+                            }
+                        )
                     case "get_hops":
-                        return_value = get_hops(**arguments)
+                        return_value = str({"hopsAway": node.hopsAway})
                     case _:
                         assert False, "Invalid function name in function call from LLM"
+                print("Return value: " + return_value)
                 conversation.append({"role": "tool", "content": return_value})
-
-            print(request)
         else:
             working = False
 
-    return (
-        result.json()
-        .get("message", {})
-        .get("content", "Did not get a valid result from Ollama :/")
+    return result.get("message", {}).get(
+        "content", "Did not get a valid result from Ollama :/"
     )
 
 
 def gather_relevant_stats(message: Message, meshtasticClient: MeshtasticClient) -> dict:
+    nodelist = meshtasticClient.nodelist()
+    meshbot_node = next((n for n in nodelist.nodes.values() if n.is_self()), None)
     stats = {
         "in_channel": not message.private_message(),
+        "meshbot": {
+            "shortName": meshbot_node.shortName,
+            "longName": meshbot_node.longName,
+            "id": meshbot_node.id,
+        },
     }
     if message.private_message():
         stats["user"] = {
@@ -226,21 +231,6 @@ def gather_relevant_stats(message: Message, meshtasticClient: MeshtasticClient) 
                 "longName": node.longName,
                 "id": node.id,
             }
-            for node in meshtasticClient.nodelist().nodes.values()
+            for node in nodelist.nodes.values()
         ]
     return stats
-
-
-def get_signal_strength(node: str) -> str:
-    node = client.nodelist().find(node)
-    return str(
-        {
-            "snr": node.snr,
-            "rssi": node.rssi,
-        }
-    )
-
-
-def get_hops(node: str) -> str:
-    node = client.nodelist().find(node)
-    return str({"hopsAway": node.hopsAway})
