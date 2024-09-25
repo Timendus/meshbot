@@ -19,11 +19,12 @@ class Message:
             del self.telemetry["raw"]
 
         position = self.data.get("decoded", {}).get("position", None)
-        if position:
+        self.position_request = self.data.get("decoded", {}).get("wantResponse", False)
+        if position and not self.position_request:
             self.position = [
-                position["latitudeI"] / pow(10, 7),
-                position["longitudeI"] / pow(10, 7),
-                position["altitude"] if "altitude" in position else 0,
+                position.get("latitudeI", 0) / pow(10, 7),
+                position.get("longitudeI", 0) / pow(10, 7),
+                position.get("altitude", 0),
             ]
 
         self.neighborInfo = self.data.get("decoded", {}).get("neighborinfo", {})
@@ -66,7 +67,10 @@ class Message:
             case "TEXT_MESSAGE_APP":
                 content = self.text
             case "POSITION_APP":
-                content = f"updated location to {self.position}"
+                if self.position_request:
+                    content = f"position request"
+                else:
+                    content = f"updated location to {self.position}"
             case "NEIGHBORINFO_APP":
                 content = f"I'm seeing these neighbours: {self.neighborInfo}"
             case "NODEINFO_APP":
