@@ -28,7 +28,7 @@ class Node:
     def __init__(self, data, interface):
         self.data = data
         self.interface = interface
-        self.sending = False
+        self.transmission = {"sending": None, "last_result": False, "timeout": None}
 
         self.num = data.get("num")
         if not self.num:
@@ -52,7 +52,7 @@ class Node:
     def is_self(self):
         return self.num == self.interface.myInfo.my_node_num
 
-    def send(self, message: str, **kwargs):
+    def send(self, message: str, **kwargs) -> bool:
         if self.id and self.interface:
             messages = self.break_message(message)
             oneliner = message.replace("\n", "\\n")
@@ -60,37 +60,46 @@ class Node:
                 f"Sending to {self} in {len(messages)} {'part' if len(messages) == 1 else 'parts'}: {oneliner}"
             )
             for msg in messages:
-                self._send(msg, **kwargs)
+                if not self._send(msg, **kwargs):
+                    return False
             return True
         else:
             return False
 
-    def _send(self, message: str, **kwargs):
-        while self.sending:
-            time.sleep(0.1)
-        self._timeout = Timer(MAX_REPLY_DELAY, self.on_timeout)
-        self._timeout.start()
-        self.sending = self.interface.sendText(
+    def _send(self, message: str, **kwargs) -> bool:
+        self.transmission["timeout"] = Timer(MAX_REPLY_DELAY, self.on_timeout)
+        self.transmission["timeout"].start()
+        self.transmission["sending"] = self.interface.sendText(
             message,
             destinationId=self.id,
             wantAck=True,
             onResponse=self.onAckNak,
             **kwargs,
         )
+        while self.transmission["sending"]:
+            time.sleep(0.1)
+        return self.transmission["last_result"]
 
     # Don't change the name of this callback
     # https://github.com/meshtastic/python/blob/c696d59b9052361856630c8eb97a061cdb51dc6b/meshtastic/mesh_interface.py#L415-L418
     def onAckNak(self, response):
-        if self.sending and self.sending.id == response["decoded"]["requestId"]:
+        if (
+            self.transmission["sending"]
+            and self.transmission["sending"].id == response["decoded"]["requestId"]
+        ):
             # Got a reply to the blocking message! Unblocking...
-            self._timeout.cancel()
-            self.sending = False
+            self.transmission["timeout"].cancel()
+            self.transmission["last_result"] = (
+                response["decoded"]["routing"]["errorReason"] == "NONE"
+            )
+            self.transmission["sending"] = None
 
     def on_timeout(self):
         logger.info(
             f"Did not get a reply from {self} within {MAX_REPLY_DELAY} seconds, moving on"
         )
-        self.sending = False
+        self.transmission["last_result"] = False
+        self.transmission["sending"] = None
 
     def break_message(self, message: str):
         # Keep it as a single message if possible
@@ -156,7 +165,7 @@ class SpecialNode(Node):
         self.id = id
         self.interface = None
         self.hardware = "UNSET"
-        self.sending = False
+        self.transmission = {"sending": None, "last_result": False, "timeout": None}
 
     def is_self(self):
         return False

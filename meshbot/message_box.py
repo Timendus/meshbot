@@ -26,13 +26,13 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
     # Handle other commands
     match message.text.upper():
         case "INBOX":
-            send_inbox(message.fromNode)
+            send_inbox(message)
         case "NEW":
-            send_new_messages(message.fromNode)
+            send_new_messages(message)
         case "OLD":
-            send_old_messages(message.fromNode)
+            send_old_messages(message)
         case "CLEAR":
-            clear_old_messages(message.fromNode)
+            clear_old_messages(message)
         case _:
             return False
 
@@ -59,24 +59,24 @@ def notify_user(message: Message, meshtasticClient: MeshtasticClient) -> bool:
     messages = messageStore.get(message.fromNode.id, [])
     numUnread = sum(1 for msg in messages if not msg["read"])
     return send_messages(
-        message.fromNode,
+        message,
         f"🤖📬 I have {numUnread} new {'message' if numUnread == 1 else 'messages'} for you! Sending {'it' if numUnread == 1 else 'them'} now...",
         read=False,
     )
 
 
-def send_messages(node: Node, intro_text: str, read: bool = False) -> bool:
-    if user_stats(node)[("numRead" if read else "numUnread")] == 0:
+def send_messages(message: Message, intro_text: str, read: bool = False) -> bool:
+    if user_stats(message.fromNode)[("numRead" if read else "numUnread")] == 0:
         return False
 
-    node.send(intro_text)
-    for msg in messageStore.get(node.id, []):
+    message.reply(intro_text)
+    for msg in messageStore.get(message.fromNode.id, []):
         if msg["read"] != read:
             continue
-        msg["read"] = True
-        node.send(
+        if message.reply(
             f"🤖✉️ From {msg['sender']}, {time_ago(msg['timestamp'])} ago:\n\n{msg['contents']}"
-        )
+        ):
+            msg["read"] = True
 
     return True
 
@@ -92,14 +92,14 @@ def store_message(message: Message, meshtasticClient: MeshtasticClient) -> bool:
     msg = " ".join(parts[2:])
 
     if len(msg) == 0:
-        message.fromNode.send("🤖🧨 I'm sorry, I can't send an empty message.")
+        message.reply("🤖🧨 I'm sorry, I can't send an empty message.")
         return True
 
     # Figure out who the recipient is
     id = parts[1]
     recipientId = meshtasticClient.nodelist().find_id(id)
     if not recipientId:
-        message.fromNode.send(
+        message.reply(
             "🤖🧨 I don't know who that is. The message was not stored.\n\nI need the short name of a node I have seen before (example: TDRP), or the node ID of the recipient (example: !8e92a31f)."
         )
         return True
@@ -115,7 +115,7 @@ def store_message(message: Message, meshtasticClient: MeshtasticClient) -> bool:
             "timestamp": datetime.now(),
         }
     )
-    message.fromNode.send(f"🤖📨 Saved this message for node `{id}`:\n\n{msg}")
+    message.reply(f"🤖📨 Saved this message for node `{id}`:\n\n{msg}")
     return True
 
 
@@ -142,48 +142,50 @@ def user_stats(node: Node) -> dict:
     }
 
 
-def send_inbox(node: Node):
-    stats = user_stats(node)
+def send_inbox(message: Message):
+    stats = user_stats(message.fromNode)
     if stats["totalMessages"] == 0:
-        node.send("🤖📭 You have no messages in your inbox")
+        message.reply("🤖📭 You have no messages in your inbox")
         return
 
     icon = "📬" if stats["numUnread"] > 0 else "📭"
-    node.send(
+    message.reply(
         f"🤖{icon} You have {stats['numUnread']} unread {pluralize('message', stats['numUnread'])}, and a grand total of {stats['totalMessages']} {pluralize('message', stats['totalMessages'])} in your inbox. Send `NEW` or `OLD` to fetch your messages."
     )
 
 
-def send_new_messages(node: Node):
-    stats = user_stats(node)
+def send_new_messages(message: Message):
+    stats = user_stats(message.fromNode)
     if not send_messages(
-        node,
+        message,
         f"🤖📬 You have {stats['numUnread']} new {pluralize('message', stats['numUnread'])}. Sending {pluralize('it', stats['numUnread'])} now...",
         read=False,
     ):
         old_messages = (
             " Send `OLD` to read your older messages." if stats["numRead"] > 0 else ""
         )
-        node.send(f"🤖📭 You have no new messages.{old_messages}")
+        message.reply(f"🤖📭 You have no new messages.{old_messages}")
 
 
-def send_old_messages(node: Node):
-    stats = user_stats(node)
+def send_old_messages(message: Message):
+    stats = user_stats(message.fromNode)
     if not send_messages(
-        node,
+        message,
         f"🤖📬 You have {stats['numRead']} old {pluralize('message', stats['numRead'])}. Sending {pluralize('it', stats['numRead'])} now...",
         read=True,
     ):
         new_messages = (
             " Send `NEW` to read your new messages." if stats["numUnread"] > 0 else ""
         )
-        node.send(f"🤖📭 You have no old messages.{new_messages}")
+        message.reply(f"🤖📭 You have no old messages.{new_messages}")
 
 
-def clear_old_messages(node: Node):
-    stats = user_stats(node)
-    messageStore[node.id] = [msg for msg in messageStore[node.id] if not msg["read"]]
-    node.send(
+def clear_old_messages(message: Message):
+    stats = user_stats(message.fromNode)
+    messageStore[message.fromNode.id] = [
+        msg for msg in messageStore[message.fromNode.id] if not msg["read"]
+    ]
+    message.reply(
         f"🤖🗑️ I removed {stats['numRead']} old {pluralize('message', stats['numRead'])}. You have {stats['numUnread']} new {pluralize('message', stats['numUnread'])} left in your inbox."
     )
 

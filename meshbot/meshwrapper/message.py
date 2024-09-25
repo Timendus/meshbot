@@ -45,7 +45,7 @@ class Message:
         self.fromNode = fromNode
         self.toNode = toNode
 
-    def reply(self, message: str, **kwargs):
+    def reply(self, message: str, **kwargs) -> bool:
         if self.toNode == Everyone:
             # This was a message in a channel, respond in the same channel
             return Everyone.send(message, channelIndex=self.channel, **kwargs)
