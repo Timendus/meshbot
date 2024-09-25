@@ -62,11 +62,13 @@ class MeshtasticClient:
 
     def _on_receive(self, packet, interface):
         nodelist = self.nodelist()
-        message = Message(
-            packet,
-            nodelist.get(packet["from"]),
-            nodelist.get(packet["to"]),
-        )
+        fromNode = nodelist.get(packet["from"])
+        if "rxSnr" in packet:
+            fromNode.snr = packet["rxSnr"]
+        if "rxRssi" in packet:
+            fromNode.rssi = packet["rxRssi"]
+
+        message = Message(packet, fromNode, nodelist.get(packet["to"]))
         if self._messageCallback:
             self._messageCallback(message)
 

@@ -48,6 +48,7 @@ class Node:
         self.lastHeard = data.get("lastHeard", 0)
         self.hopsAway = data.get("hopsAway", 0)
         self.snr = data.get("snr", None)
+        self.rssi = None
 
     def is_self(self):
         return self.num == self.interface.myInfo.my_node_num
@@ -146,12 +147,13 @@ class Node:
         hardware = f"{self.hardware}, " if self.hardware != "UNSET" else ""
         role = f"{self.role}, " if self.role else ""
         snr = f", SNR {self.snr:.2f}" if self.snr else ""
+        rssi = f", RSSI {self.rssi:.2f}" if self.rssi else ""
         hops = (
             f", {self.hopsAway} {'hop' if self.hopsAway == 1 else 'hops'} away"
             if self.hopsAway > 0
             else ""
         )
-        return f"{str(self)} \033[90m({hardware}{role}last heard {time_ago(self.lastHeard)} ago{snr}{hops})\033[0m"
+        return f"{str(self)} \033[90m({hardware}{role}last heard {time_ago(self.lastHeard)} ago{snr}{rssi}{hops})\033[0m"
 
     def to_succinct_string(self):
         """Use when indentifying this node in Meshtastic messages"""

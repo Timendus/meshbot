@@ -38,16 +38,29 @@ def signal_report(message: Message, meshtasticClient: MeshtasticClient):
         return
 
     if subject.hopsAway == 0:
-        if subject.snr:
+        if subject.snr and subject.rssi:
+            message.reply(
+                f"🤖📶 I'm reading {subject.to_succinct_string()} with an SNR of {subject.snr} and an RSSI of {subject.rssi}."
+            )
+        elif subject.snr:
             message.reply(
                 f"🤖📶 I'm reading {subject.to_succinct_string()} with an SNR of {subject.snr}."
             )
+        elif subject.rssi:
+            message.reply(
+                f"🤖📶 I'm reading {subject.to_succinct_string()} with an RSSI of {subject.rssi}."
+            )
         else:
             message.reply(
-                f"🤖📶 I don't have an SNR reading for {subject.to_succinct_string()}."
+                f"🤖📶 I don't have any readings for {subject.to_succinct_string()}."
             )
     else:
-        snr = f", with an SNR of {subject.snr} on the last hop" if subject.snr else ""
+        rssi = f" and an RSSI of {subject.rssi}" if subject.rssi else ""
+        snr = (
+            f", with an SNR of {subject.snr}{rssi} on the last hop"
+            if subject.snr
+            else ""
+        )
         message.reply(
             f"🤖📶 {subject.to_succinct_string()} is {subject.hopsAway} {'hop' if subject.hopsAway == 1 else 'hops'} away{snr}."
         )
