@@ -45,6 +45,9 @@ class Message:
         self.fromNode = fromNode
         self.toNode = toNode
 
+    def private_message(self):
+        return self.toNode != Everyone
+
     def reply(self, message: str, **kwargs) -> bool:
         if self.toNode == Everyone:
             # This was a message in a channel, respond in the same channel
