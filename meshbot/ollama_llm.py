@@ -38,15 +38,19 @@ Keep your replies polite and friendly, but short and to the point, since
 bandwidth is very limited. Preferably under 234 characters, so they can be
 transmitted in a single packet.
 
+Messages will be prepended with "Node XXXXXX says:". This is for your
+convenience only, so you can see who said what. This is not part of the original
+message. You should not prepend a similar message to your replies.
+
 If you are in a channel (a group chat) and you think you can't answer the
 question or you are quite sure you are not being addressed, just say nothing by
 answering with the string "NOTHING". Only "NOTHING", no more. If you are talking
 one-on-one you are always expected to reply.
 
 Do not hallucinate things, only use the information below and the available
-tools/functions that you can call when answering specific questions. Otherwise
-just answer that you do not know, or that you do not know what to say. Feel free
-to talk generally about unrelated topics when asked.
+tools/functions that you can call when answering radio reception specific
+questions. Otherwise just answer that you do not know, or that you do not know
+what to say. Feel free to talk generally about unrelated topics when asked.
 
 Information:
 
@@ -170,7 +174,7 @@ def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
     while working:
         try:
             result = requests.post(config["OLLAMA_API"] + "/chat", json=request)
-        except ConnectionError:
+        except requests.exceptions.ConnectionError:
             return f"Could not reach the Ollama server at this time."
         if not result.ok:
             return f"Did not get a valid result from Ollama :/ Status: {result.status_code} - {result.text}"
@@ -187,14 +191,9 @@ def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
                 assert node, "The tool should have been called with a node parameter"
                 match function.get("name", None):
                     case "get_signal_strength":
-                        return_value = str(
-                            {
-                                "snr": node.snr,
-                                "rssi": node.rssi,
-                            }
-                        )
+                        return_value = f"Node {node.to_succinct_string()} is being received with an SNR of {node.snr} and an RSSI of {node.rssi}"
                     case "get_hops":
-                        return_value = str({"hopsAway": node.hopsAway})
+                        return_value = f"Node {node.to_succinct_string()} is {node.hopsAway} hops away"
                     case _:
                         assert False, "Invalid function name in function call from LLM"
                 print("Return value: " + return_value)
