@@ -32,9 +32,7 @@ def connectionHandler(meshtasticClient: MeshtasticClient):
 def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
     logger.info(message)  # So we can actually see messages coming in on the terminal
 
-    if ollama_llm(
-        message, meshtasticClient, config["OLLAMA_API"], config["OLLAMA_MODEL"]
-    ):
+    if ollama_llm(message, meshtasticClient):
         return
     if radio_commands(message, meshtasticClient):
         return
