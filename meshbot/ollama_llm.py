@@ -102,11 +102,7 @@ def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
         return False
 
     # Only reply if the required Ollama settings have been configured
-    if not (
-        "OLLAMA_API" in config
-        and "OLLAMA_MODEL" in config
-        and "OLLAMA_LANGUAGE" in config
-    ):
+    if not ("OLLAMA_API" in config and "OLLAMA_MODEL" in config):
         return False
 
     # Check if model is available
