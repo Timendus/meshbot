@@ -57,7 +57,7 @@ class MeshtasticClient:
     def nodelist(self):
         nodelist = Nodelist()
         for node in self._interface.nodes.values():
-            nodelist.add(Node(node, self._interface))
+            nodelist.add(Node.from_packet(node, self._interface))
         return nodelist
 
     def _on_receive(self, packet, interface):
@@ -68,7 +68,9 @@ class MeshtasticClient:
         if "rxRssi" in packet:
             fromNode.rssi = packet["rxRssi"]
 
-        message = Message(packet, fromNode, nodelist.get(packet["to"]))
+        message = Message.from_packet(packet)
+        message.fromNode = fromNode
+        message.toNode = nodelist.get(packet["to"])
         if self._messageCallback:
             self._messageCallback(message)
 

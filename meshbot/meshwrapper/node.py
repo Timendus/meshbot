@@ -25,33 +25,45 @@ wrapper = textwrap.TextWrapper(
 class Node:
     """Class representing a Meshtastic node in the LoRa mesh"""
 
-    def __init__(self, data, interface):
-        self.data = data
-        self.interface = interface
+    def __init__(self):
         self.transmission = {"sending": None, "last_result": False, "timeout": None}
 
-        self.num = data.get("num")
-        if not self.num:
-            logger.error("ERROR: Node has no ID")
-            raise Exception("A node should have an ID")
+    @staticmethod
+    def from_packet(data, interface):
+        node = Node()
+        node.data = data
+        node.interface = interface
 
-        self.id = data.get("user", {}).get("id", "")
-        self.mac = data.get("user", {}).get("macaddr", "")
-        self.hardware = data.get("user", {}).get("hwModel", "")
-        self.shortName = (
-            data.get("user", {}).get("shortName", "") if self.mac else "UNKN"
-        )
-        self.longName = (
-            data.get("user", {}).get("longName", "") if self.mac else "Unknown node"
-        )
-        self.role = data.get("user", {}).get("role", None)
-        self.lastHeard = data.get("lastHeard", 0)
-        self.hopsAway = data.get("hopsAway", 0)
-        self.snr = data.get("snr", None)
-        self.rssi = None
+        node.num = data.get("num")
+        assert node.num, "Node should at least have an ID"
+
+        node.id = data.get("user", {}).get("id", "")
+        node.mac = data.get("user", {}).get("macaddr", "")
+        node.hardware = data.get("user", {}).get("hwModel", "")
+        node.role = data.get("user", {}).get("role", None)
+        node.shortName = data.get("user", {}).get("shortName", "")
+        node.longName = data.get("user", {}).get("longName", "")
+        if not node.mac:
+            node.shortName = "UNKN"
+            node.longName = "Unknown node"
+
+        node.lastHeard = data.get("lastHeard", 0)
+        node.hopsAway = data.get("hopsAway", 0)
+        node.snr = data.get("snr", None)
+        node.rssi = None
+
+        return node
 
     def is_self(self):
-        return self.num == self.interface.myInfo.my_node_num
+        return (
+            hasattr(self, "interface")
+            and hasattr(self.interface, "myInfo")
+            and hasattr(self.interface.myInfo, "my_node_num")
+            and self.num == my_node_num
+        )
+
+    def is_broadcast(self):
+        return self is Everyone
 
     def send(self, message: str, **kwargs) -> bool:
         if self.id and self.interface:
