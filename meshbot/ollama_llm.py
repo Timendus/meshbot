@@ -163,8 +163,10 @@ def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
         "model": config["OLLAMA_MODEL"],
         "messages": conversation,
         "stream": False,
-        "tools": tools,
     }
+
+    if config.get("OLLAMA_USE_TOOLS") == "True":
+        request["tools"] = tools
 
     working = True
     while working:
