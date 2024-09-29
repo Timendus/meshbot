@@ -80,7 +80,7 @@ Edit the `production.env` file to specify how the bot should connect to your
 node and also where to find Ollama if you wish to use the self-hosted LLM
 feature. The file has some examples to get you started:
 
-https://github.com/Timendus/meshbot/blob/4aca4a8a4bc8e608e3463eddda93a91ce081592a/.env#L1-L16
+https://github.com/Timendus/meshbot/blob/735012c0db883f43378fceedabd81103a04355e7/.env#L1-L17
 
 Then install the dependencies in a new virtual environment and run the bot:
 
