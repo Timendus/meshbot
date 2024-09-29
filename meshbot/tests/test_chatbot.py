@@ -75,10 +75,12 @@ def test_to_string():
         str(bot)
         == """🤖👋 Hey there! I understand these commands:
 
+General commands
 - TEST: Test command
 
 Test Module
-- TEST2: Test command 2"""
+- TEST2: Test command 2
+"""
     )
 
 

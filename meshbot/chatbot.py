@@ -7,7 +7,22 @@ from .meshwrapper import MeshtasticClient, Message
 class Chatbot:
     """
     Helper class for defining the states and commands that a chatbot
-    understands, and routing the incoming messages to the proper commands
+    understands, and routing the incoming messages to the proper commands.
+
+    This is the structure of the commands that this class understands:
+
+    {
+        "module": "Test module",        # Name of the module this command belongs to
+        "command": "/TEST",             # Can be a single string or a list of commands
+        "description": "Test command",  # If omitted, command will not be listed
+        "state": "MAIN",                # State in which the command is valid (default: "MAIN")
+        "private": True,                # Is command valid in private messages? (default: True)
+        "channel": False,               # Is command valid in channel messages? (default: False)
+
+        # Function to call when the command is received. Can optionally return a
+        # string with the name of the next state to change to
+        "function": lambda m, c: m.reply("Hello!"),
+    }
     """
 
     def __init__(self):
@@ -27,8 +42,8 @@ class Chatbot:
 
     def handle(self, message: Message, client: MeshtasticClient) -> None:
         is_text_message = message.type == "TEXT_MESSAGE_APP"
-        is_private_message = message.toNode.is_self()
-        is_channel_message = message.toNode.is_broadcast()
+        is_private_message = message.private_message()
+        is_channel_message = not is_private_message
 
         # Find commands that are valid in this state and are of the right type
         relevant_commands = [
@@ -99,8 +114,8 @@ class Chatbot:
             commands = list(commands)
             if not any(self._visible(c) for c in commands):
                 continue
-            if module is not None:
-                description += f"\n\n{module}"
+            module = module or "General commands"
+            description += f"\n{module}\n"
             for command in commands:
                 if self._visible(command):
                     cmd = (
@@ -108,7 +123,7 @@ class Chatbot:
                         if type(command["command"]) != list
                         else ", ".join(command["command"])
                     )
-                    description += f"\n- {cmd}: {command['description']}"
+                    description += f"- {cmd}: {command['description']}\n"
 
         return description
 
@@ -125,5 +140,5 @@ class Chatbot:
         return (
             command["command"] is not self.CATCH_ALL_EVENTS
             and command["command"] is not self.CATCH_ALL_TEXT
-            and command["description"] is not None
+            and command.get("description", None) is not None
         )
