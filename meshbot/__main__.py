@@ -61,13 +61,16 @@ def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
 [1/2]
 """
         )
+        llm = ""
+        if "OLLAMA_API" in config and "OLLAMA_MODEL" in config:
+            llm = "- /LLM: Have a conversation with the AI\n"
         message.reply(
-            """As well as these slash commands:
+            f"""As well as these slash commands:
 
 - /NODES: Get a summary of nodes
 - /NODELIST: Get a list of the nodes I see
 - /SIGNAL [<id>]: Get signal report on a node
-
+{llm}
 [2/2]
 """
         )
