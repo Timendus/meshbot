@@ -23,14 +23,19 @@ def register(bot: Chatbot):
 
 
 def get_weather(message: Message):
-    if hasattr(message.fromNode, "location"):
-        location = message.fromNode.location
+    if message.fromNode.position:
+        position = message.fromNode.position
         location_text = "Here's the current weather at your location:"
-    else:
-        location = message.nodelist.get_self().location
+    elif message.nodelist.get_self() and message.nodelist.get_self().position:
+        position = message.nodelist.get_self().position
         location_text = "I can't see your location, so I'll give you the current weather at my location:"
+    else:
+        message.reply(
+            f"🤖🧨 I'm sorry! I can't give you a weather report, because I don't know the location of either of us."
+        )
+        return
 
-    weather = fetch_weather(location)
+    weather = fetch_weather(position)
     if weather:
         message.reply(f"🤖🌂 {location_text}\n\n{weather}")
     else:
@@ -38,14 +43,19 @@ def get_weather(message: Message):
 
 
 def get_forecast(message: Message):
-    if message.fromNode.location:
-        location = message.fromNode.location
+    if message.fromNode.position:
+        position = message.fromNode.position
         location_text = "Here's the weather forecast for your location:"
-    else:
-        location = message.nodelist.get_self().location
+    elif message.nodelist.get_self() and message.nodelist.get_self().position:
+        position = message.nodelist.get_self().position
         location_text = "I can't see your location, so I'll give you the weather forecast for my location:"
+    else:
+        message.reply(
+            f"🤖🧨 I'm sorry! I can't give you a weather forecast, because I don't know the location of either of us."
+        )
+        return
 
-    forecast = fetch_forecast(location)
+    forecast = fetch_forecast(position)
     if forecast:
         message.reply(f"🤖🌂 {location_text}\n\n{forecast}")
     else:

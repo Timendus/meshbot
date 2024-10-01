@@ -47,10 +47,10 @@ class Node:
             node.longName = "Unknown node"
 
         position = data.get("position", None)
-        if position:
+        if position and "latitude" in position and "longitude" in position:
             node.position = [
-                position.get("latitude", 0),
-                position.get("longitude", 0),
+                position["latitude"],
+                position["longitude"],
                 position.get("altitude", 0),
             ]
         else:

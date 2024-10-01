@@ -344,16 +344,18 @@ wmo_codes = {
 }
 
 
-def fetch_weather(location) -> str | None:
+def fetch_weather(position) -> str | None:
     try:
         params = {
-            "latitude": location[0],
-            "longitude": location[1],
+            "latitude": position[0],
+            "longitude": position[1],
             "current": [
                 "temperature_2m",
                 "is_day",
                 "precipitation",
                 "weather_code",
+                "wind_speed_10m",
+                "wind_direction_10m",
             ],
         }
         result = requests.get("https://api.open-meteo.com/v1/forecast", params=params)
@@ -377,18 +379,20 @@ def fetch_weather(location) -> str | None:
         )
         icon = weather_code.get("icon", None)
         description = weather_code.get("description", None)
+        print(weather.get("current_units", {}).get("wind_direction_10m", None))
+        wind = f" Wind: {weather.get('current', {}).get('wind_speed_10m', None)}{weather.get('current_units', {}).get('wind_speed_10m', None)} {wind_direction(weather.get('current', {}).get('wind_direction_10m', None))}"
 
-        return f"{icon + ' ' if icon else ''}It's {temp}{temp_unit}. {description + '.' if description else ''}{' '+ str(precip) + precip_unit if precip > 0 else ''}"
+        return f"{icon + ' ' if icon else ''}It's {temp}{temp_unit}. {description + '.' if description else ''}{' '+ str(precip) + precip_unit if precip > 0 else ''}{wind}"
     except Exception as e:
         print(e)
         return None
 
 
-def fetch_forecast(location) -> str | None:
+def fetch_forecast(position) -> str | None:
     try:
         params = {
-            "latitude": location[0],
-            "longitude": location[1],
+            "latitude": position[0],
+            "longitude": position[1],
             "daily": [
                 "weather_code",
                 "temperature_2m_max",
@@ -396,6 +400,7 @@ def fetch_forecast(location) -> str | None:
                 "precipitation_sum",
                 "precipitation_probability_max",
                 "wind_speed_10m_max",
+                "wind_direction_10m_dominant",
             ],
             "timezone": "auto",
         }
@@ -412,12 +417,12 @@ def fetch_forecast(location) -> str | None:
         units = forecast.get("daily_units", None)
 
         forecast_string = ""
-        for i, date in enumerate(daily.get("time", [])):
+        for i, date in enumerate(daily.get("time", [])[:6]):
             date = datetime.strptime(date, "%Y-%m-%d")
             forecast_string += f"""{friendly_date(date)} - {wmo_codes.get(str(daily.get("weather_code", "")[i]), {}).get("day", {}).get("icon", "")}
-Temp: Min {daily.get("temperature_2m_min", "")[i]}{units.get("temperature_2m_min", "")} - Max {daily.get("temperature_2m_max", "")[i]}{units.get("temperature_2m_max", "")}
+Temp: min {daily.get("temperature_2m_min", "")[i]}{units.get("temperature_2m_min", "")} - max {daily.get("temperature_2m_max", "")[i]}{units.get("temperature_2m_max", "")}
 Precip: {daily.get("precipitation_sum", "")[i]}{units.get("precipitation_sum", "")} - {daily.get("precipitation_probability_max", "")[i]}{units.get("precipitation_probability_max", "")} chance
-Wind: {daily.get("wind_speed_10m_max", "")[i]}{units.get("wind_speed_10m_max", "")}
+Wind: {daily.get("wind_speed_10m_max", "")[i]}{units.get("wind_speed_10m_max", "")} {wind_direction(daily.get("wind_direction_10m_dominant", "")[i])}
 
 """
 
@@ -425,3 +430,27 @@ Wind: {daily.get("wind_speed_10m_max", "")[i]}{units.get("wind_speed_10m_max", "
     except Exception as e:
         print(e)
         return None
+
+
+def wind_direction(direction) -> str:
+    match direction:
+        case dir if 0 <= dir < 22.5:
+            return "↑"
+        case dir if 22.5 <= dir < 67.5:
+            return "↗"
+        case dir if 67.5 <= dir < 112.5:
+            return "→"
+        case dir if 112.5 <= dir < 157.5:
+            return "↘"
+        case dir if 157.5 <= dir < 202.5:
+            return "↓"
+        case dir if 202.5 <= dir < 247.5:
+            return "↙"
+        case dir if 247.5 <= dir < 292.5:
+            return "←"
+        case dir if 292.5 <= dir < 337.5:
+            return "↖"
+        case dir if 337.5 <= dir < 360:
+            return "↑"
+        case _:
+            return ""
