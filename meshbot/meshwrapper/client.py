@@ -69,6 +69,7 @@ class MeshtasticClient:
             fromNode.rssi = packet["rxRssi"]
 
         message = Message.from_packet(packet)
+        message.nodelist = nodelist
         message.fromNode = fromNode
         message.toNode = nodelist.get(packet["to"])
         if self._messageCallback:

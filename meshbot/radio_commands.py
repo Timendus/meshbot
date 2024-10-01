@@ -1,4 +1,4 @@
-from .meshwrapper import MeshtasticClient, Message
+from .meshwrapper import Message
 from .chatbot import Chatbot
 
 
@@ -25,7 +25,7 @@ def register(bot: Chatbot):
     )
 
 
-def signal_report(message: Message, meshtasticClient: MeshtasticClient):
+def signal_report(message: Message):
     # Figure out who we're requesting a signal report about
     parts = message.text.split(" ")
     if len(parts) == 1:
@@ -33,7 +33,7 @@ def signal_report(message: Message, meshtasticClient: MeshtasticClient):
         subject = message.fromNode
     else:
         # Send a signal report on the specified node
-        subject = meshtasticClient.nodelist().find(" ".join(parts[1:]))
+        subject = message.nodelist.find(" ".join(parts[1:]))
 
     if not subject:
         message.reply(
@@ -70,11 +70,11 @@ def signal_report(message: Message, meshtasticClient: MeshtasticClient):
         )
 
 
-def nodes_info(message: Message, meshtasticClient: MeshtasticClient):
-    message.reply(f"🤖📡 Nodes report!\n\n{meshtasticClient.nodelist().summary()}")
+def nodes_info(message: Message):
+    message.reply(f"🤖📡 Nodes report!\n\n{message.nodelist.summary()}")
 
 
-def node_list(message: Message, meshtasticClient: MeshtasticClient):
+def node_list(message: Message):
     message.reply(
-        f"🤖👀 I've seen these nodes:\n\n{meshtasticClient.nodelist().to_succinct_string()}"
+        f"🤖👀 I've seen these nodes:\n\n{message.nodelist.to_succinct_string()}"
     )

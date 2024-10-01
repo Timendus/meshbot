@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from .meshwrapper import MeshtasticClient, Message, Node
+from .meshwrapper import Message, Node
 from .meshwrapper.time_helper import time_ago
 from .chatbot import Chatbot
 
@@ -48,7 +48,7 @@ def register(bot: Chatbot):
 messageStore = {}
 
 
-def send_inbox(message: Message, client: MeshtasticClient):
+def send_inbox(message: Message):
     _store_welcome_message(message.fromNode)
     stats = _user_stats(message.fromNode)
 
@@ -62,7 +62,7 @@ def send_inbox(message: Message, client: MeshtasticClient):
     )
 
 
-def send_new_messages(message: Message, client: MeshtasticClient):
+def send_new_messages(message: Message):
     _store_welcome_message(message.fromNode)
     stats = _user_stats(message.fromNode)
 
@@ -79,7 +79,7 @@ def send_new_messages(message: Message, client: MeshtasticClient):
     _send_messages(message.fromNode, read=False)
 
 
-def send_old_messages(message: Message, client: MeshtasticClient):
+def send_old_messages(message: Message):
     _store_welcome_message(message.fromNode)
     stats = _user_stats(message.fromNode)
 
@@ -96,7 +96,7 @@ def send_old_messages(message: Message, client: MeshtasticClient):
     _send_messages(message.fromNode, read=True)
 
 
-def clear_old_messages(message: Message, client: MeshtasticClient):
+def clear_old_messages(message: Message):
     _store_welcome_message(message.fromNode)
     stats = _user_stats(message.fromNode)
 
@@ -108,7 +108,7 @@ def clear_old_messages(message: Message, client: MeshtasticClient):
     )
 
 
-def store_message(message: Message, client: MeshtasticClient):
+def store_message(message: Message):
     """
     Store new messages when requested by the user
     """
@@ -124,7 +124,7 @@ def store_message(message: Message, client: MeshtasticClient):
 
     # Figure out who the recipient is
     id = parts[1]
-    recipientId = client.nodelist().find_id(id)
+    recipientId = message.nodelist.find_id(id)
     if not recipientId:
         message.fromNode.send(
             "🤖🧨 I don't know who that is. The message was not stored.\n\nI need the short name of a node I have seen before (example: TDRP), or the node ID of the recipient (example: !8e92a31f)."
@@ -145,7 +145,7 @@ def store_message(message: Message, client: MeshtasticClient):
     message.fromNode.send(f"🤖📨 Saved this message for node `{id}`:\n\n{msg}")
 
 
-def notify_user(message: Message, client: MeshtasticClient):
+def notify_user(message: Message):
     """
     Check to see if one of our recipients came in range, and has new messages.
     """

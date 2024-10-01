@@ -1,7 +1,7 @@
 from itertools import groupby
 from typing import Callable
 
-from .meshwrapper import MeshtasticClient, Message
+from .meshwrapper import Message
 
 
 class Chatbot:
@@ -41,7 +41,7 @@ class Chatbot:
         for command in commands:
             self.commands.append(command)
 
-    def handle(self, message: Message, client: MeshtasticClient) -> None:
+    def handle(self, message: Message) -> None:
         is_text_message = message.type == "TEXT_MESSAGE_APP"
         is_private_message = message.private_message()
         is_channel_message = not is_private_message
@@ -70,14 +70,14 @@ class Chatbot:
                 if self._matching(c, Chatbot.CATCH_ALL_EVENTS)
             ]
             for cmd in catch_all_events:
-                self._run_function(cmd["function"], message, client)
+                self._run_function(cmd["function"], message)
             return
 
         # Messages that are text messages are evaluated specific first, catch
         # all later
         specific = [c for c in relevant_commands if self._matching(c, message.text)]
         for cmd in specific:
-            self._run_function(cmd["function"], message, client)
+            self._run_function(cmd["function"], message)
 
         # Have we now handled this message?
         if len(specific) > 0:
@@ -91,17 +91,16 @@ class Chatbot:
             or self._matching(c, Chatbot.CATCH_ALL_EVENTS)
         ]
         for cmd in catch_all:
-            self._run_function(cmd["function"], message, client)
+            self._run_function(cmd["function"], message)
         return
 
     def _run_function(
         self,
-        function: Callable[Message, MeshtasticClient],
+        function: Callable[[Message], str | None],
         message: Message,
-        client: MeshtasticClient,
     ) -> None:
         assert function is not None, "Can't call a nonexistant function"
-        new_state = function(message, client)
+        new_state = function(message)
         if type(new_state) == str:
             self.state = new_state
 

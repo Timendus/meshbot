@@ -34,10 +34,6 @@ print(bot)
 # Create fake domain model
 
 
-class Client:
-    pass
-
-
 fromNode = Node()
 fromNode.num = 1
 fromNode.id = "!00000001"
@@ -64,9 +60,6 @@ nodelist = Nodelist()
 nodelist.add(fromNode)
 nodelist.add(toNode)
 
-client = Client()
-client.nodelist = lambda: nodelist
-
 
 # Take input from the user and run it through the bot
 
@@ -78,8 +71,9 @@ while True:
         message.reply = output
         message.fromNode = fromNode
         message.toNode = toNode
+        message.nodelist = nodelist
 
-        bot.handle(message, client)
+        bot.handle(message)
     except KeyboardInterrupt:
         break
     except EOFError:

@@ -2,7 +2,7 @@ import requests
 import os
 from dotenv import dotenv_values
 
-from .meshwrapper import MeshtasticClient, Message
+from .meshwrapper import Message, Nodelist
 from .chatbot import Chatbot
 
 config = {
@@ -48,21 +48,21 @@ def register(bot: Chatbot):
 conversations = {}
 
 
-def start_conversation(message: Message, client: MeshtasticClient) -> str:
+def start_conversation(message: Message) -> str:
     message.reply("🤖🧠 Spinning up the LLM")
     conversations[identifier(message)] = [
         {
             "role": "system",
-            "content": system_prompt + str(gather_relevant_stats(message, client)),
+            "content": system_prompt + str(gather_relevant_stats(message)),
         }
     ]
-    reply = reply_from_ollama(conversations[identifier(message)], client)
+    reply = reply_from_ollama(conversations[identifier(message)], message.nodelist)
     message.reply("🤖🧠 Started LLM conversation")
     reply_if_not_empty(message, reply)
     return "LLM"
 
 
-def converse(message: Message, client: MeshtasticClient):
+def converse(message: Message):
     assert identifier(message) in conversations, "Conversation should have been started"
     conversations[identifier(message)].append(
         {
@@ -71,11 +71,11 @@ def converse(message: Message, client: MeshtasticClient):
         }
     )
     reply_if_not_empty(
-        message, reply_from_ollama(conversations[identifier(message)], client)
+        message, reply_from_ollama(conversations[identifier(message)], message.nodelist)
     )
 
 
-def stop_conversation(message: Message, client: MeshtasticClient) -> str:
+def stop_conversation(message: Message) -> str:
     del conversations[identifier(message)]
     message.reply("🤖🧠 Ended LLM conversation")
     return "MAIN"
@@ -174,7 +174,7 @@ tools = [
 ]
 
 
-def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
+def reply_from_ollama(conversation: list, nodelist: Nodelist):
     request = {
         "model": config["OLLAMA_MODEL"],
         "messages": conversation,
@@ -201,7 +201,7 @@ def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
             for call in tool_calls:
                 function = call.get("function", {})
                 arguments = function.get("arguments", {})
-                node = meshtasticClient.nodelist().find(arguments.get("node", ""))
+                node = nodelist.find(arguments.get("node", ""))
                 assert node, "The tool should have been called with a node parameter"
                 match function.get("name", None):
                     case "get_signal_strength":
@@ -220,9 +220,10 @@ def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
     )
 
 
-def gather_relevant_stats(message: Message, meshtasticClient: MeshtasticClient) -> dict:
-    nodelist = meshtasticClient.nodelist()
-    meshbot_node = next((n for n in nodelist.nodes.values() if n.is_self()), None)
+def gather_relevant_stats(message: Message) -> dict:
+    meshbot_node = next(
+        (n for n in message.nodelist.nodes.values() if n.is_self()), None
+    )
     stats = {
         "in_channel": not message.private_message(),
         "meshbot": {
@@ -244,6 +245,6 @@ def gather_relevant_stats(message: Message, meshtasticClient: MeshtasticClient) 
                 "longName": node.longName,
                 "id": node.id,
             }
-            for node in nodelist.nodes.values()
+            for node in message.nodelist.nodes.values()
         ]
     return stats

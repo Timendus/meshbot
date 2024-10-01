@@ -40,9 +40,9 @@ def connectionHandler(meshtasticClient: MeshtasticClient):
     logger.info(meshtasticClient.nodelist())
 
 
-def messageHandler(message: Message, client: MeshtasticClient):
+def messageHandler(message: Message):
     logger.info(message)  # So we can actually see messages coming in on the terminal
-    bot.handle(message, client)
+    bot.handle(message)
 
 
 # Start the connection to the Meshtastic node
@@ -58,7 +58,7 @@ if config["TRANSPORT"] == "serial":
     meshtasticClient = MeshtasticClient(
         device=None if config["DEVICE"] == "detect" else config["DEVICE"],
         connected=lambda: connectionHandler(meshtasticClient),
-        message=lambda message: messageHandler(message, meshtasticClient),
+        message=messageHandler,
         debug=DEBUG,
     )
 elif config["TRANSPORT"] == "net":
@@ -67,7 +67,7 @@ elif config["TRANSPORT"] == "net":
     meshtasticClient = MeshtasticClient(
         hostname=host,
         connected=lambda: connectionHandler(meshtasticClient),
-        message=lambda message: messageHandler(message, meshtasticClient),
+        message=messageHandler,
         debug=DEBUG,
     )
 else:
