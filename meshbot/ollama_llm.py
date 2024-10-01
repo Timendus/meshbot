@@ -2,7 +2,7 @@ import requests
 import os
 from dotenv import dotenv_values
 
-from .meshwrapper import Message, Nodelist
+from .meshwrapper import Message, Nodelist, Node
 from .chatbot import Chatbot
 
 config = {
@@ -53,10 +53,10 @@ def start_conversation(message: Message) -> str:
     conversations[identifier(message)] = [
         {
             "role": "system",
-            "content": system_prompt + str(gather_relevant_stats(message)),
+            "content": system_prompt + str(_gather_relevant_stats(message)),
         }
     ]
-    reply = reply_from_ollama(conversations[identifier(message)], message.nodelist)
+    reply = _reply_from_ollama(conversations[identifier(message)], message.nodelist)
     message.reply("🤖🧠 Started LLM conversation")
     reply_if_not_empty(message, reply)
     return "LLM"
@@ -71,7 +71,8 @@ def converse(message: Message):
         }
     )
     reply_if_not_empty(
-        message, reply_from_ollama(conversations[identifier(message)], message.nodelist)
+        message,
+        _reply_from_ollama(conversations[identifier(message)], message.nodelist),
     )
 
 
@@ -103,9 +104,7 @@ in the same language if you can.
 
 Remember that Meshtastic is unlicensed and does not use call signs. Also
 remember that Meshtastic uses the LoRa protocol, which can work reliably with
-very noisy messages. Typical LoRa SNR values are between -20 dB and +10 dB. RSSI
-can go all the way down to -128 and rarely gets above -30. Messages can hop
-through the mesh via other nodes.
+very noisy messages. Messages can hop through the mesh via other nodes.
 
 These icons are often used in long names of nodes:
 
@@ -120,7 +119,7 @@ These icons are often used in long names of nodes:
 🛰️ - Node with GPS/GNSS on board
 
 Keep your replies polite and friendly, but short and to the point, since
-bandwidth is very limited. Preferably under 234 characters, so they can be
+bandwidth is very limited. Preferably under 232 characters, so they can be
 transmitted in a single packet.
 
 If you are in a channel (a group chat) and you think you can't answer the
@@ -131,6 +130,8 @@ Do not hallucinate things, only use the information below and the available
 tools/functions that you can call when answering radio reception specific
 questions. Otherwise just answer that you do not know, or that you do not know
 what to say. Feel free to talk generally about unrelated topics when asked.
+
+Only respond with your reply to the user(s). Nothing else.
 
 Information:
 
@@ -174,7 +175,7 @@ tools = [
 ]
 
 
-def reply_from_ollama(conversation: list, nodelist: Nodelist):
+def _reply_from_ollama(conversation: list, nodelist: Nodelist):
     request = {
         "model": config["OLLAMA_MODEL"],
         "messages": conversation,
@@ -205,7 +206,7 @@ def reply_from_ollama(conversation: list, nodelist: Nodelist):
                 assert node, "The tool should have been called with a node parameter"
                 match function.get("name", None):
                     case "get_signal_strength":
-                        return_value = f"Node {node.to_succinct_string()} is being received with an SNR of {node.snr} and an RSSI of {node.rssi}"
+                        return_value = _get_signal_strength(node)
                     case "get_hops":
                         return_value = f"Node {node.to_succinct_string()} is {node.hopsAway} hops away"
                     case _:
@@ -220,7 +221,23 @@ def reply_from_ollama(conversation: list, nodelist: Nodelist):
     )
 
 
-def gather_relevant_stats(message: Message) -> dict:
+def _get_signal_strength(node: Node) -> str:
+    rssi = f" and an RSSI of {node.rssi}" if node.rssi else ""
+    qualification = "That's a very good signal! Connection should be strong."
+    if node.snr < 0:
+        qualification = "That's a pretty good signal. Connection should be strong."
+    if node.snr < -10:
+        qualification = "That's not a very good signal, but it will work."
+    if node.snr < -15:
+        qualification = (
+            "That's a pretty bad signal. The connection may not be very reliable."
+        )
+    if node.snr < -20:
+        qualification = "That's a very bad signal. Don't expect to connect reliably."
+    return f"Node {node.to_succinct_string()} is being received with an SNR of {node.snr}{rssi}. {qualification}"
+
+
+def _gather_relevant_stats(message: Message) -> dict:
     meshbot_node = next(
         (n for n in message.nodelist.nodes.values() if n.is_self()), None
     )
