@@ -118,27 +118,51 @@ class Chatbot:
             description += f"\n{module}\n"
             for command in commands:
                 if self._visible(command):
-                    cmd = (
-                        command["command"]
-                        if type(command["command"]) != list
-                        else ", ".join(command["command"])
-                    )
-                    description += f"- {cmd}: {command['description']}\n"
+                    if "command" in command:
+                        cmd = (
+                            command["command"]
+                            if type(command["command"]) != list
+                            else ", ".join(command["command"])
+                        )
+                        description += f"- {cmd}: {command['description']}\n"
+                    elif "prefix" in command:
+                        description += f"- {command['description']}\n"
 
         return description
 
     def _matching(self, command, input):
-        if type(command) == dict:
-            return self._matching(command["command"], input)
-        if type(command) == list:
-            return any(self._matching(c, input) for c in command)
+        if "command" in command:
+            if type(command["command"]) == list:
+                return any(self._same(c, input) for c in command["command"])
+            return self._same(command["command"], input)
+
+        if "prefix" in command:
+            if type(command["prefix"]) == list:
+                return any(self._startsWith(c, input) for c in command["prefix"])
+            return self._startsWith(command["prefix"], input)
+
+        return False
+
+    def _same(self, command, input):
         if type(command) == str and type(input) == str:
             return command.upper().strip() == input.upper().strip()
-        return command == input
+        return command is input
+
+    def _startsWith(self, prefix, input):
+        if type(prefix) == str and type(input) == str:
+            return input.upper().strip().startswith(prefix.upper().strip())
+        return False
 
     def _visible(self, command):
         return (
-            command["command"] is not self.CATCH_ALL_EVENTS
-            and command["command"] is not self.CATCH_ALL_TEXT
-            and command.get("description", None) is not None
-        )
+            (
+                "command" in command
+                and command["command"] is not self.CATCH_ALL_EVENTS
+                and command["command"] is not self.CATCH_ALL_TEXT
+            )
+            or (
+                "prefix" in command
+                and command["prefix"] is not self.CATCH_ALL_EVENTS
+                and command["prefix"] is not self.CATCH_ALL_TEXT
+            )
+        ) and command.get("description", None) is not None

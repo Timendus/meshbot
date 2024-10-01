@@ -13,7 +13,7 @@ bot = Chatbot()
 
 for module in [
     "about",
-    # "message_box",
+    "message_box",
     "ollama_llm",
     # "radio_commands",
 ]:
@@ -21,8 +21,9 @@ for module in [
     exec(f"register_{module}(bot)")
 
 
-def output(response: str):
+def output(response: str) -> bool:
     print(response)
+    return True
 
 
 print(bot)
@@ -43,6 +44,7 @@ fromNode.longName = "User"
 fromNode.snr = 5.0
 fromNode.rssi = -80
 fromNode.hopsAway = 0
+fromNode.send = output
 
 toNode = Node()
 toNode.num = 2
