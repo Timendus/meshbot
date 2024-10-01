@@ -31,7 +31,6 @@ class Node:
     @staticmethod
     def from_packet(data, interface):
         node = Node()
-        node.data = data
         node.interface = interface
 
         node.num = data.get("num")
@@ -46,6 +45,16 @@ class Node:
         if not node.mac:
             node.shortName = "UNKN"
             node.longName = "Unknown node"
+
+        position = data.get("position", None)
+        if position:
+            node.position = [
+                position.get("latitude", 0),
+                position.get("longitude", 0),
+                position.get("altitude", 0),
+            ]
+        else:
+            node.position = None
 
         node.lastHeard = data.get("lastHeard", 0)
         node.hopsAway = data.get("hopsAway", 0)
