@@ -49,7 +49,7 @@ conversations = {}
 
 
 def start_conversation(message: Message) -> str:
-    message.reply("🤖🧠 Spinning up the LLM")
+    message.reply("🤖⏳ Spinning up the LLM, just a moment...")
     conversations[identifier(message)] = [
         {
             "role": "system",
