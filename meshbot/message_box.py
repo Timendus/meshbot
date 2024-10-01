@@ -170,7 +170,7 @@ def notify_user(message: Message):
 
     # Send this user their new messages
     message.fromNode.send(
-        f"🤖📬 I have {numUnread} new {'message' if numUnread == 1 else 'messages'} for you! Sending {'it' if numUnread == 1 else 'them'} now..."
+        f"🤖📬 I have {stats['numUnread']} new {_pluralize('message', stats['numUnread'])} for you! Sending {_pluralize('it', stats['numUnread'])} now..."
     )
     _send_messages(message.fromNode, read=False)
 
