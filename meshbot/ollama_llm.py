@@ -3,6 +3,7 @@ import os
 from dotenv import dotenv_values
 
 from .meshwrapper import MeshtasticClient, Message
+from .chatbot import Chatbot
 
 config = {
     **dotenv_values(".env"),
@@ -10,6 +11,90 @@ config = {
     **dotenv_values("development.env"),
     **os.environ,
 }
+
+
+def register(bot: Chatbot):
+    if not ("OLLAMA_API" in config and "OLLAMA_MODEL" in config):
+        return
+
+    bot.add_state("LLM")
+
+    bot.add_command(
+        {
+            "command": "/LLM",
+            "module": "Ollama LLM",
+            "description": "Have a conversation with the AI",
+            "function": start_conversation,
+            "channel": True,
+        },
+        {
+            "state": "LLM",
+            "command": bot.CATCH_ALL_TEXT,
+            "module": "Ollama LLM",
+            "function": converse,
+            "channel": True,
+        },
+        {
+            "state": "LLM",
+            "command": ["/STOP", "/EXIT"],
+            "module": "Ollama LLM",
+            "description": "End conversation",
+            "function": stop_conversation,
+            "channel": True,
+        },
+    )
+
+
+conversations = {}
+
+
+def start_conversation(message: Message, client: MeshtasticClient) -> str:
+    message.reply("🤖🧠 Spinning up the LLM")
+    conversations[identifier(message)] = [
+        {
+            "role": "system",
+            "content": system_prompt + str(gather_relevant_stats(message, client)),
+        }
+    ]
+    reply = reply_from_ollama(conversations[identifier(message)], client)
+    message.reply("🤖🧠 Started LLM conversation")
+    reply_if_not_empty(message, reply)
+    return "LLM"
+
+
+def converse(message: Message, client: MeshtasticClient):
+    assert identifier(message) in conversations, "Conversation should have been started"
+    conversations[identifier(message)].append(
+        {
+            "role": "user",
+            "content": f"Node {message.fromNode.id}: {message.text}",
+        }
+    )
+    reply_if_not_empty(
+        message, reply_from_ollama(conversations[identifier(message)], client)
+    )
+
+
+def stop_conversation(message: Message, client: MeshtasticClient) -> str:
+    del conversations[identifier(message)]
+    message.reply("🤖🧠 Ended LLM conversation")
+    return "MAIN"
+
+
+def identifier(message: Message) -> str:
+    if message.private_message():
+        return message.fromNode.id
+    else:
+        return f"Channel {message.channel}"
+
+
+def reply_if_not_empty(message: Message, reply: str):
+    if reply != "":
+        conversations[identifier(message)].append(
+            {"role": "assistant", "content": reply}
+        )
+        message.reply("🤖 " + reply)
+
 
 system_prompt = f"""
 You are Meshbot, a helpful chatbot on the Meshtastic network. You talk a bit
@@ -38,14 +123,9 @@ Keep your replies polite and friendly, but short and to the point, since
 bandwidth is very limited. Preferably under 234 characters, so they can be
 transmitted in a single packet.
 
-Messages will be prepended with "Node XXXXXX says:". This is for your
-convenience only, so you can see who said what. This is not part of the original
-message. You should not prepend a similar message to your replies.
-
 If you are in a channel (a group chat) and you think you can't answer the
-question or you are quite sure you are not being addressed, just say nothing by
-answering with the string "NOTHING". Only "NOTHING", no more. If you are talking
-one-on-one you are always expected to reply.
+question or you think that you are not being addressed, just say nothing. If you
+are talking one-on-one you are always expected to reply.
 
 Do not hallucinate things, only use the information below and the available
 tools/functions that you can call when answering radio reception specific
@@ -93,70 +173,6 @@ tools = [
     },
 ]
 
-conversations = {}
-
-
-def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
-    # Only reply to text messages
-    if message.type != "TEXT_MESSAGE_APP":
-        return False
-
-    # Only reply if the required Ollama settings have been configured
-    if not ("OLLAMA_API" in config and "OLLAMA_MODEL" in config):
-        return False
-
-    # Check if model is available
-    # models = requests.get(config["OLLAMA_API"] + "/tags").text
-    # print(models)
-
-    if message.private_message():
-        identifier = message.fromNode.id
-    else:
-        identifier = f"Channel {message.channel}"
-
-    # Stopping conversations
-    if identifier in conversations and message.text.upper() in [
-        "STOP",
-        "QUIT",
-        "EXIT",
-        "/STOP",
-        "/QUIT",
-        "/EXIT",
-    ]:
-        del conversations[identifier]
-        message.reply("🤖🧠 Ended LLM conversation")
-        return True
-
-    # Are we in a conversation?
-    if identifier in conversations:
-        conversations[identifier].append(
-            {
-                "role": "user",
-                "content": f"Node {message.fromNode.id} says: {message.text}",
-            }
-        )
-        reply = reply_from_ollama(conversations[identifier], meshtasticClient)
-        if reply != "" and reply != "NOTHING":
-            message.reply("🤖 " + reply)
-        return True
-
-    # Starting conversations
-    if message.text.upper() == "/LLM":
-        conversations[identifier] = [
-            {
-                "role": "system",
-                "content": system_prompt
-                + str(gather_relevant_stats(message, meshtasticClient)),
-            }
-        ]
-        reply = reply_from_ollama(conversations[identifier], meshtasticClient)
-        message.reply("🤖🧠 Started LLM conversation")
-        if reply != "" and reply != "NOTHING":
-            message.reply("🤖 " + reply)
-        return True
-
-    return False
-
 
 def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
     request = {
@@ -172,16 +188,16 @@ def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
     while working:
         try:
             result = requests.post(config["OLLAMA_API"] + "/chat", json=request)
-        except requests.exceptions.ConnectionError:
-            return f"Could not reach the Ollama server at this time."
+        except requests.exceptions.ConnectionError as err:
+            return f"Could not reach the Ollama server at this time: {err}"
         if not result.ok:
-            return f"Did not get a valid result from Ollama :/ Status: {result.status_code} - {result.text}"
+            return f"Did not get a valid result from Ollama. Status: {result.status_code} - {result.text}"
 
         result = result.json()
         tool_calls = result.get("message", {}).get("tool_calls", False)
 
         if tool_calls:
-            print("Tool call! " + str(tool_calls))
+            # print("Tool call! " + str(tool_calls))
             for call in tool_calls:
                 function = call.get("function", {})
                 arguments = function.get("arguments", {})
@@ -194,7 +210,7 @@ def reply_from_ollama(conversation: list, meshtasticClient: MeshtasticClient):
                         return_value = f"Node {node.to_succinct_string()} is {node.hopsAway} hops away"
                     case _:
                         assert False, "Invalid function name in function call from LLM"
-                print("Return value: " + return_value)
+                # print("Return value: " + return_value)
                 conversation.append({"role": "tool", "content": return_value})
         else:
             working = False
