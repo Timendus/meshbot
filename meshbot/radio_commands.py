@@ -8,22 +8,22 @@ def register(bot: Chatbot):
             "command": "/NODES",
             "module": "Radio commands",
             "description": "Get a summary of nodes",
-            "function": nodes_info,
             "channel": True,
+            "function": nodes_info,
         },
         {
             "command": "/NODELIST",
             "module": "Radio commands",
             "description": "Get a list of the nodes I see",
-            "function": node_list,
             "channel": True,
+            "function": node_list,
         },
         {
             "prefix": "/SIGNAL",
             "module": "Radio commands",
             "description": "/SIGNAL [<id>]: Get signal report on a node",
-            "function": signal_report,
             "channel": True,
+            "function": signal_report,
         },
     )
 

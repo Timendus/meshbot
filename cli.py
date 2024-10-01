@@ -15,9 +15,9 @@ bot = Chatbot()
 
 for module in [
     "about",
+    "radio_commands",
     "message_box",
     "ollama_llm",
-    "radio_commands",
 ]:
     exec(f"from meshbot.{module} import register as register_{module}")
     exec(f"register_{module}(bot)")

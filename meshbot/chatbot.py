@@ -12,16 +12,17 @@ class Chatbot:
     This is the structure of the commands that this class understands:
 
     {
-        "module": "Test module",        # Name of the module this command belongs to
-        "command": "/TEST",             # Can be a single string, a list of commands or one of the catch alls
-        "description": "Test command",  # If omitted, command will not be listed
         "state": "MAIN",                # State in which the command is valid (default: "MAIN")
+        "command": "/TEST",             # Can be a single string, a list of commands or one of the catch alls
+        "prefix": "/TEST",              # Instead of a command we can use a prefix or a list of prefixes
+        "module": "Test module",        # Name of the module this command belongs to
+        "description": "Test command",  # If omitted, command will not be listed
         "private": True,                # Is command valid in private messages? (default: True)
         "channel": False,               # Is command valid in channel messages? (default: False)
 
-        # Function to call when the command is received. Can optionally return a
+        # Function to call when the command is matched. Can optionally return a
         # string with the name of the next state to change to
-        "function": lambda m, c: m.reply("Hello!"),
+        "function": lambda message: message.reply("Hello!"),
     }
     """
 
@@ -48,12 +49,12 @@ class Chatbot:
 
         # Find commands that are valid in this state and are of the right type
         relevant_commands = [
-            c
-            for c in self.commands
-            if c.get("state", "MAIN") is self.state
+            cmd
+            for cmd in self.commands
+            if cmd.get("state", "MAIN") is self.state
             and (
-                c.get("private", True) == is_private_message
-                or c.get("channel", False) == is_channel_message
+                cmd.get("private", True) == is_private_message
+                or cmd.get("channel", False) == is_channel_message
             )
         ]
 
@@ -65,9 +66,9 @@ class Chatbot:
         # CATCH_ALL_EVENTS commands
         if not is_text_message:
             catch_all_events = [
-                c
-                for c in relevant_commands
-                if self._matching(c, Chatbot.CATCH_ALL_EVENTS)
+                cmd
+                for cmd in relevant_commands
+                if self._matching(cmd, Chatbot.CATCH_ALL_EVENTS)
             ]
             for cmd in catch_all_events:
                 self._run_function(cmd["function"], message)
@@ -75,7 +76,9 @@ class Chatbot:
 
         # Messages that are text messages are evaluated specific first, catch
         # all later
-        specific = [c for c in relevant_commands if self._matching(c, message.text)]
+        specific = [
+            cmd for cmd in relevant_commands if self._matching(cmd, message.text)
+        ]
         for cmd in specific:
             self._run_function(cmd["function"], message)
 
@@ -85,10 +88,10 @@ class Chatbot:
 
         # No specific command matched, try catch all
         catch_all = [
-            c
-            for c in relevant_commands
-            if self._matching(c, Chatbot.CATCH_ALL_TEXT)
-            or self._matching(c, Chatbot.CATCH_ALL_EVENTS)
+            cmd
+            for cmd in relevant_commands
+            if self._matching(cmd, Chatbot.CATCH_ALL_TEXT)
+            or self._matching(cmd, Chatbot.CATCH_ALL_EVENTS)
         ]
         for cmd in catch_all:
             self._run_function(cmd["function"], message)
@@ -101,13 +104,12 @@ class Chatbot:
     ) -> None:
         assert function is not None, "Can't call a nonexistant function"
         new_state = function(message)
-        if type(new_state) == str:
+        if type(new_state) == str and new_state in self.states:
             self.state = new_state
 
     def __str__(self):
         description = "🤖👋 Hey there! I understand these commands:\n"
 
-        self.commands.sort(key=lambda c: c.get("module", ""))
         for module, commands in groupby(
             self.commands,
             key=lambda c: c.get("module", None),
@@ -161,9 +163,5 @@ class Chatbot:
                 and command["command"] is not Chatbot.CATCH_ALL_EVENTS
                 and command["command"] is not Chatbot.CATCH_ALL_TEXT
             )
-            or (
-                "prefix" in command
-                and command["prefix"] is not Chatbot.CATCH_ALL_EVENTS
-                and command["prefix"] is not Chatbot.CATCH_ALL_TEXT
-            )
+            or "prefix" in command
         ) and command.get("description", None) is not None

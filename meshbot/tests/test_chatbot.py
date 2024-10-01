@@ -55,17 +55,17 @@ def test_to_string():
     bot = Chatbot()
     bot.add_command(
         {
-            "command": "TEST2",
+            "command": "TEST1",
             "module": "Test Module",
-            "description": "Test command 2",
+            "description": "Test command 1",
             "function": lambda m, c: "TEST2",
             "state": "MAIN",
         }
     )
     bot.add_command(
         {
-            "command": "TEST",
-            "description": "Test command",
+            "command": "TEST2",
+            "description": "Test command 2",
             "function": lambda m, c: "TEST",
             "state": "MAIN",
         }
@@ -75,10 +75,10 @@ def test_to_string():
         str(bot)
         == """🤖👋 Hey there! I understand these commands:
 
-General commands
-- TEST: Test command
-
 Test Module
+- TEST1: Test command 1
+
+General commands
 - TEST2: Test command 2
 """
     )
@@ -93,12 +93,9 @@ def test_simple_message_handling():
     message.type = "TEXT_MESSAGE_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback(m, c):
+    def callback(m):
         nonlocal called
         assert m == message
-        assert c == client
         called += 1
 
     bot.add_command(
@@ -110,8 +107,8 @@ def test_simple_message_handling():
         }
     )
 
-    bot.handle(message, client)
-    bot.handle(message, client)
+    bot.handle(message)
+    bot.handle(message)
 
     assert called == 2, "Test message should have been handled by test command twice"
 
@@ -125,15 +122,12 @@ def test_specific_before_catch_all_message_handling():
     message.type = "TEXT_MESSAGE_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback1(m, c):
+    def callback1(m):
         nonlocal called
         assert m == message
-        assert c == client
         called = True
 
-    def callback2(m, c):
+    def callback2(m):
         assert False, "This should not be called"
 
     bot.add_command(
@@ -151,7 +145,7 @@ def test_specific_before_catch_all_message_handling():
         },
     )
 
-    bot.handle(message, client)
+    bot.handle(message)
 
     assert called, "Test message should have been handled by test command"
 
@@ -165,12 +159,9 @@ def test_catch_all_message_handling():
     message.type = "TEXT_MESSAGE_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback(m, c):
+    def callback(m):
         nonlocal called
         assert m == message
-        assert c == client
         called = True
 
     bot.add_command(
@@ -182,7 +173,7 @@ def test_catch_all_message_handling():
         }
     )
 
-    bot.handle(message, client)
+    bot.handle(message)
 
     assert called, "Test message should have been handled by catch all command"
 
@@ -195,9 +186,7 @@ def test_ignore_other_events_message_handling():
     message.type = "TELEMETRY_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback(m, c):
+    def callback(m):
         assert False, "This should not be called"
 
     bot.add_command(
@@ -215,7 +204,7 @@ def test_ignore_other_events_message_handling():
         },
     )
 
-    bot.handle(message, client)
+    bot.handle(message)
 
     assert True, "Telemetry packet should have been ignored"
 
@@ -229,12 +218,9 @@ def test_catch_all_events_message_handling():
     message.type = "TELEMETRY_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback(m, c):
+    def callback(m):
         nonlocal called
         assert m == message
-        assert c == client
         called = True
 
     bot.add_command(
@@ -246,7 +232,7 @@ def test_catch_all_events_message_handling():
         }
     )
 
-    bot.handle(message, client)
+    bot.handle(message)
 
     assert (
         called
@@ -262,12 +248,9 @@ def test_multiple_commands_message_handling():
     message.type = "TEXT_MESSAGE_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback(m, c):
+    def callback(m):
         nonlocal called
         assert m == message
-        assert c == client
         called = True
 
     bot.add_command(
@@ -279,7 +262,7 @@ def test_multiple_commands_message_handling():
         }
     )
 
-    bot.handle(message, client)
+    bot.handle(message)
 
     assert called, "Test message should have been handled by multi-command test command"
 
@@ -293,12 +276,9 @@ def test_multiple_handlers_message_handling():
     message.type = "TEXT_MESSAGE_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback(m, c):
+    def callback(m):
         nonlocal called
         assert m == message
-        assert c == client
         called += 1
 
     bot.add_command(
@@ -316,7 +296,7 @@ def test_multiple_handlers_message_handling():
         },
     )
 
-    bot.handle(message, client)
+    bot.handle(message)
 
     assert called == 2, "Test message should have been handled by both commands"
 
@@ -330,12 +310,9 @@ def test_multiple_catch_all_handlers_message_handling():
     message.type = "TEXT_MESSAGE_APP"
     message.toNode = Node()
 
-    client = "fake client"
-
-    def callback(m, c):
+    def callback(m):
         nonlocal called
         assert m == message
-        assert c == client
         called += 1
 
     bot.add_command(
@@ -353,6 +330,6 @@ def test_multiple_catch_all_handlers_message_handling():
         },
     )
 
-    bot.handle(message, client)
+    bot.handle(message)
 
     assert called == 2, "Test message should have been handled by both commands"
