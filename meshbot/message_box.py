@@ -9,37 +9,37 @@ def register(bot: Chatbot):
     bot.add_command(
         {
             "command": "INBOX",
-            "module": "Message box",
+            "module": "✉️ Message box",
             "description": "Check your inbox",
             "function": send_inbox,
         },
         {
             "command": "NEW",
-            "module": "Message box",
+            "module": "✉️ Message box",
             "description": "Get new messages",
             "function": send_new_messages,
         },
         {
             "command": "OLD",
-            "module": "Message box",
+            "module": "✉️ Message box",
             "description": "Get old messages",
             "function": send_old_messages,
         },
         {
             "command": "CLEAR",
-            "module": "Message box",
+            "module": "✉️ Message box",
             "description": "Clear old messages",
             "function": clear_old_messages,
         },
         {
             "prefix": "SEND",
-            "module": "Message box",
+            "module": "✉️ Message box",
             "description": "SEND <id> <message>: Leave a message",
             "function": store_message,
         },
         {
             "command": Chatbot.CATCH_ALL_EVENTS,
-            "module": "Message box",
+            "module": "✉️ Message box",
             "function": notify_user,
         },
     )

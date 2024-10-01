@@ -22,7 +22,7 @@ def register(bot: Chatbot):
     bot.add_command(
         {
             "command": "/LLM",
-            "module": "Ollama LLM",
+            "module": "🧠 Ollama LLM",
             "description": "Start AI conversation",
             "channel": True,
             "function": start_conversation,
@@ -30,14 +30,14 @@ def register(bot: Chatbot):
         {
             "state": "LLM",
             "command": Chatbot.CATCH_ALL_TEXT,
-            "module": "Ollama LLM",
+            "module": "🧠 Ollama LLM",
             "channel": True,
             "function": converse,
         },
         {
             "state": "LLM",
             "command": ["/STOP", "/EXIT"],
-            "module": "Ollama LLM",
+            "module": "🧠 Ollama LLM",
             "description": "End conversation",
             "channel": True,
             "function": stop_conversation,

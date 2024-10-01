@@ -6,21 +6,21 @@ def register(bot: Chatbot):
     bot.add_command(
         {
             "command": "/NODES",
-            "module": "Radio commands",
+            "module": "📡 Radio commands",
             "description": "Get a summary of nodes",
             "channel": True,
             "function": nodes_info,
         },
         {
             "command": "/NODELIST",
-            "module": "Radio commands",
+            "module": "📡 Radio commands",
             "description": "Get a list of the nodes I see",
             "channel": True,
             "function": node_list,
         },
         {
             "prefix": "/SIGNAL",
-            "module": "Radio commands",
+            "module": "📡 Radio commands",
             "description": "/SIGNAL [<id>]: Get signal report on a node",
             "channel": True,
             "function": signal_report,
