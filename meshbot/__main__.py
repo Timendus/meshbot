@@ -6,9 +6,7 @@ import logging
 from dotenv import dotenv_values
 
 from .meshwrapper import MeshtasticClient, Message, MeshtasticConnectionLost
-from .message_box import handle as message_box
-from .radio_commands import handle as radio_commands
-from .ollama_llm import handle as ollama_llm
+from .chatbot import Chatbot
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Meshbot")
@@ -21,6 +19,19 @@ config = {
 }
 
 
+# Create a bot and register the desired modules with it
+
+bot = Chatbot()
+for module in [
+    "about",
+    "message_box",
+    "ollama_llm",
+    "radio_commands",
+]:
+    exec(f"from {module} import register as register_{module}")
+    exec(f"register_{module}(bot)")
+
+
 # Define event handlers
 
 
@@ -29,54 +40,13 @@ def connectionHandler(meshtasticClient: MeshtasticClient):
     logger.info(meshtasticClient.nodelist())
 
 
-def messageHandler(message: Message, meshtasticClient: MeshtasticClient):
+def messageHandler(message: Message, client: MeshtasticClient):
     logger.info(message)  # So we can actually see messages coming in on the terminal
-
-    if ollama_llm(message, meshtasticClient):
-        return
-    if radio_commands(message, meshtasticClient):
-        return
-    if message_box(message, meshtasticClient):
-        return
-
-    # If someone sends us a direct message that's not handled above, reply
-    if message.type != "TEXT_MESSAGE_APP":
-        return
-
-    if message.text.upper() in ["/ABOUT", "/HELP", "/MESHBOT"]:
-        return message.reply(
-            "🤖👋 Hello! I'm your friendly neighbourhood Meshbot. My code is available at https://github.com/timendus/meshbot. Send me a direct message to see what I can do!"
-        )
-
-    if message.toNode.is_self():
-        message.reply(
-            """🤖👋 Hey there! I understand these message box commands:
-
-- INBOX: Check your inbox
-- NEW: Get new messages
-- OLD: Get old messages
-- CLEAR: Clear old messages
-- SEND <id> <message>: Leave a message
-
-[1/2]
-"""
-        )
-        llm = ""
-        if "OLLAMA_API" in config and "OLLAMA_MODEL" in config:
-            llm = "- /LLM: Have a conversation with the AI\n"
-        message.reply(
-            f"""As well as these slash commands:
-
-- /NODES: Get a summary of nodes
-- /NODELIST: Get a list of the nodes I see
-- /SIGNAL [<id>]: Get signal report on a node
-{llm}
-[2/2]
-"""
-        )
+    bot.handle(message, client)
 
 
 # Start the connection to the Meshtastic node
+
 
 DEBUG = False
 
@@ -102,6 +72,7 @@ elif config["TRANSPORT"] == "net":
     )
 else:
     raise Exception(f"Unknown transport: {config['TRANSPORT']}")
+
 
 # Output the node list every half hour
 
