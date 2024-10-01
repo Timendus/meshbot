@@ -5,46 +5,50 @@ from .node import Node, Everyone
 class Message:
     """Class representing a message that was received over the LoRa mesh"""
 
-    def __init__(self, data, fromNode: Node, toNode: Node):
-        self.data = data
+    def __init__(self):
+        pass
 
-        self.id = data.get("id")
-        self.channel = int(data.get("channel", 0))
-        self.timestamp = datetime.fromtimestamp(data.get("rxTime", 0))
-        self.type = self.data.get("decoded", {}).get("portnum")
-        self.text = self.data.get("decoded", {}).get("text", "")
+    @staticmethod
+    def from_packet(data):
+        message = Message()
+        message.data = data
 
-        self.telemetry = self.data.get("decoded", {}).get("telemetry", {})
-        if "raw" in self.telemetry:
-            del self.telemetry["raw"]
+        message.id = data.get("id")
+        message.channel = int(data.get("channel", 0))
+        message.timestamp = datetime.fromtimestamp(data.get("rxTime", 0))
+        message.type = data.get("decoded", {}).get("portnum")
+        message.text = data.get("decoded", {}).get("text", "")
 
-        position = self.data.get("decoded", {}).get("position", None)
-        self.position_request = self.data.get("decoded", {}).get("wantResponse", False)
-        if position and not self.position_request:
-            self.position = [
+        message.telemetry = data.get("decoded", {}).get("telemetry", {})
+        if "raw" in message.telemetry:
+            del message.telemetry["raw"]
+
+        position = data.get("decoded", {}).get("position", None)
+        message.position_request = data.get("decoded", {}).get("wantResponse", False)
+        if position and not message.position_request:
+            message.position = [
                 position.get("latitudeI", 0) / pow(10, 7),
                 position.get("longitudeI", 0) / pow(10, 7),
                 position.get("altitude", 0),
             ]
 
-        self.neighborInfo = self.data.get("decoded", {}).get("neighborinfo", {})
-        if "raw" in self.neighborInfo:
-            del self.neighborInfo["raw"]
+        message.neighborInfo = data.get("decoded", {}).get("neighborinfo", {})
+        if "raw" in message.neighborInfo:
+            del message.neighborInfo["raw"]
 
-        self.user = self.data.get("decoded", {}).get("user", {})
-        if "raw" in self.user:
-            del self.user["raw"]
+        message.user = data.get("decoded", {}).get("user", {})
+        if "raw" in message.user:
+            del message.user["raw"]
 
-        self.routing = self.data.get("decoded", {}).get("routing", {})
-        if "raw" in self.routing:
-            del self.routing["raw"]
+        message.routing = data.get("decoded", {}).get("routing", {})
+        if "raw" in message.routing:
+            del message.routing["raw"]
 
-        self.admin = self.data.get("decoded", {}).get("admin", {})
-        if "raw" in self.admin:
-            del self.admin["raw"]
+        message.admin = data.get("decoded", {}).get("admin", {})
+        if "raw" in message.admin:
+            del message.admin["raw"]
 
-        self.fromNode = fromNode
-        self.toNode = toNode
+        return message
 
     def private_message(self):
         return self.toNode != Everyone

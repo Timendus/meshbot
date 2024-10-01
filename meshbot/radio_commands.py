@@ -1,27 +1,34 @@
-from .meshwrapper import MeshtasticClient, Message
+from .meshwrapper import Message
+from .chatbot import Chatbot
 
 
-def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
-    # Only reply to text messages
-    if message.type != "TEXT_MESSAGE_APP":
-        return False
+def register(bot: Chatbot):
+    bot.add_command(
+        {
+            "command": "/NODES",
+            "module": "Radio commands",
+            "description": "Get a summary of nodes",
+            "channel": True,
+            "function": nodes_info,
+        },
+        {
+            "command": "/NODELIST",
+            "module": "Radio commands",
+            "description": "Get a list of the nodes I see",
+            "channel": True,
+            "function": node_list,
+        },
+        {
+            "prefix": "/SIGNAL",
+            "module": "Radio commands",
+            "description": "/SIGNAL [<id>]: Get signal report on a node",
+            "channel": True,
+            "function": signal_report,
+        },
+    )
 
-    if message.text.upper().startswith("/SIGNAL"):
-        signal_report(message, meshtasticClient)
-        return True
 
-    match message.text.upper():
-        case "/NODES":
-            nodes_info(message, meshtasticClient)
-        case "/NODELIST":
-            node_list(message, meshtasticClient)
-        case _:
-            return False
-
-    return True
-
-
-def signal_report(message: Message, meshtasticClient: MeshtasticClient):
+def signal_report(message: Message):
     # Figure out who we're requesting a signal report about
     parts = message.text.split(" ")
     if len(parts) == 1:
@@ -29,7 +36,7 @@ def signal_report(message: Message, meshtasticClient: MeshtasticClient):
         subject = message.fromNode
     else:
         # Send a signal report on the specified node
-        subject = meshtasticClient.nodelist().find(" ".join(parts[1:]))
+        subject = message.nodelist.find(" ".join(parts[1:]))
 
     if not subject:
         message.reply(
@@ -66,11 +73,11 @@ def signal_report(message: Message, meshtasticClient: MeshtasticClient):
         )
 
 
-def nodes_info(message: Message, meshtasticClient: MeshtasticClient):
-    message.reply(f"🤖📡 Nodes report!\n\n{meshtasticClient.nodelist().summary()}")
+def nodes_info(message: Message):
+    message.reply(f"🤖📡 Nodes report!\n\n{message.nodelist.summary()}")
 
 
-def node_list(message: Message, meshtasticClient: MeshtasticClient):
+def node_list(message: Message):
     message.reply(
-        f"🤖👀 I've seen these nodes:\n\n{meshtasticClient.nodelist().to_succinct_string()}"
+        f"🤖👀 I've seen these nodes:\n\n{message.nodelist.to_succinct_string()}"
     )
