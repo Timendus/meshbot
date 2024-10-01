@@ -29,7 +29,7 @@ def register(bot: Chatbot):
         },
         {
             "state": "LLM",
-            "command": bot.CATCH_ALL_TEXT,
+            "command": Chatbot.CATCH_ALL_TEXT,
             "module": "Ollama LLM",
             "function": converse,
             "channel": True,

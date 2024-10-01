@@ -138,7 +138,7 @@ def test_specific_before_catch_all_message_handling():
 
     bot.add_command(
         {
-            "command": bot.CATCH_ALL_TEXT,
+            "command": Chatbot.CATCH_ALL_TEXT,
             "description": "Test command",
             "function": callback2,
             "state": "MAIN",
@@ -175,7 +175,7 @@ def test_catch_all_message_handling():
 
     bot.add_command(
         {
-            "command": bot.CATCH_ALL_TEXT,
+            "command": Chatbot.CATCH_ALL_TEXT,
             "description": "Test command",
             "function": callback,
             "state": "MAIN",
@@ -202,7 +202,7 @@ def test_ignore_other_events_message_handling():
 
     bot.add_command(
         {
-            "command": bot.CATCH_ALL_TEXT,
+            "command": Chatbot.CATCH_ALL_TEXT,
             "description": "Test command",
             "function": callback,
             "state": "MAIN",
@@ -239,7 +239,7 @@ def test_catch_all_events_message_handling():
 
     bot.add_command(
         {
-            "command": bot.CATCH_ALL_EVENTS,
+            "command": Chatbot.CATCH_ALL_EVENTS,
             "description": "Test command",
             "function": callback,
             "state": "MAIN",
@@ -282,3 +282,77 @@ def test_multiple_commands_message_handling():
     bot.handle(message, client)
 
     assert called, "Test message should have been handled by multi-command test command"
+
+
+def test_multiple_handlers_message_handling():
+    bot = Chatbot()
+    called = 0
+
+    message = Message()
+    message.text = "TEST"
+    message.type = "TEXT_MESSAGE_APP"
+    message.toNode = Node()
+
+    client = "fake client"
+
+    def callback(m, c):
+        nonlocal called
+        assert m == message
+        assert c == client
+        called += 1
+
+    bot.add_command(
+        {
+            "command": "TEST",
+            "description": "Test command 1",
+            "function": callback,
+            "state": "MAIN",
+        },
+        {
+            "command": "TEST",
+            "description": "Test command 2",
+            "function": callback,
+            "state": "MAIN",
+        },
+    )
+
+    bot.handle(message, client)
+
+    assert called == 2, "Test message should have been handled by both commands"
+
+
+def test_multiple_catch_all_handlers_message_handling():
+    bot = Chatbot()
+    called = 0
+
+    message = Message()
+    message.text = "TEST"
+    message.type = "TEXT_MESSAGE_APP"
+    message.toNode = Node()
+
+    client = "fake client"
+
+    def callback(m, c):
+        nonlocal called
+        assert m == message
+        assert c == client
+        called += 1
+
+    bot.add_command(
+        {
+            "command": Chatbot.CATCH_ALL_EVENTS,
+            "description": "Test command 1",
+            "function": callback,
+            "state": "MAIN",
+        },
+        {
+            "command": Chatbot.CATCH_ALL_TEXT,
+            "description": "Test command 2",
+            "function": callback,
+            "state": "MAIN",
+        },
+    )
+
+    bot.handle(message, client)
+
+    assert called == 2, "Test message should have been handled by both commands"

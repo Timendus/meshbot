@@ -13,7 +13,7 @@ class Chatbot:
 
     {
         "module": "Test module",        # Name of the module this command belongs to
-        "command": "/TEST",             # Can be a single string or a list of commands
+        "command": "/TEST",             # Can be a single string, a list of commands or one of the catch alls
         "description": "Test command",  # If omitted, command will not be listed
         "state": "MAIN",                # State in which the command is valid (default: "MAIN")
         "private": True,                # Is command valid in private messages? (default: True)
@@ -25,12 +25,13 @@ class Chatbot:
     }
     """
 
+    CATCH_ALL_TEXT = 1  # Get all text messages
+    CATCH_ALL_EVENTS = 2  # Get all packets
+
     def __init__(self):
         self.states = ["MAIN"]
         self.state = "MAIN"
         self.commands = []
-        self.CATCH_ALL_EVENTS = 1
-        self.CATCH_ALL_TEXT = 2
 
     def add_state(self, *states):
         for state in states:
@@ -63,35 +64,34 @@ class Chatbot:
         # Messages that are not text messages can only be handled by
         # CATCH_ALL_EVENTS commands
         if not is_text_message:
-            catch_all_events = next(
-                (
-                    c
-                    for c in relevant_commands
-                    if self._matching(c, self.CATCH_ALL_EVENTS)
-                ),
-                None,
-            )
-            if catch_all_events:
-                self._run_function(catch_all_events["function"], message, client)
+            catch_all_events = [
+                c
+                for c in relevant_commands
+                if self._matching(c, Chatbot.CATCH_ALL_EVENTS)
+            ]
+            for cmd in catch_all_events:
+                self._run_function(cmd["function"], message, client)
             return
 
         # Messages that are text messages are evaluated specific first, catch
         # all later
-        specific = next(
-            (c for c in relevant_commands if self._matching(c, message.text)),
-            None,
-        )
-        if specific:
-            return self._run_function(specific["function"], message, client)
+        specific = [c for c in relevant_commands if self._matching(c, message.text)]
+        for cmd in specific:
+            self._run_function(cmd["function"], message, client)
 
-        catch_all = next(
-            (c for c in relevant_commands if self._matching(c, self.CATCH_ALL_TEXT)),
-            None,
-        )
-        if catch_all:
-            return self._run_function(catch_all["function"], message, client)
+        # Have we now handled this message?
+        if len(specific) > 0:
+            return
 
-        # No matches, just ignore this message
+        # No specific command matched, try catch all
+        catch_all = [
+            c
+            for c in relevant_commands
+            if self._matching(c, Chatbot.CATCH_ALL_TEXT)
+            or self._matching(c, Chatbot.CATCH_ALL_EVENTS)
+        ]
+        for cmd in catch_all:
+            self._run_function(cmd["function"], message, client)
         return
 
     def _run_function(
@@ -101,7 +101,9 @@ class Chatbot:
         client: MeshtasticClient,
     ) -> None:
         assert function is not None, "Can't call a nonexistant function"
-        self.state = function(message, client) or self.state
+        new_state = function(message, client)
+        if type(new_state) == str:
+            self.state = new_state
 
     def __str__(self):
         description = "🤖👋 Hey there! I understand these commands:\n"
@@ -157,12 +159,12 @@ class Chatbot:
         return (
             (
                 "command" in command
-                and command["command"] is not self.CATCH_ALL_EVENTS
-                and command["command"] is not self.CATCH_ALL_TEXT
+                and command["command"] is not Chatbot.CATCH_ALL_EVENTS
+                and command["command"] is not Chatbot.CATCH_ALL_TEXT
             )
             or (
                 "prefix" in command
-                and command["prefix"] is not self.CATCH_ALL_EVENTS
-                and command["prefix"] is not self.CATCH_ALL_TEXT
+                and command["prefix"] is not Chatbot.CATCH_ALL_EVENTS
+                and command["prefix"] is not Chatbot.CATCH_ALL_TEXT
             )
         ) and command.get("description", None) is not None

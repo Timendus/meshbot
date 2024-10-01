@@ -38,7 +38,7 @@ def register(bot: Chatbot):
             "function": store_message,
         },
         {
-            "command": bot.CATCH_ALL_EVENTS,
+            "command": Chatbot.CATCH_ALL_EVENTS,
             "module": "Message box",
             "function": notify_user,
         },
