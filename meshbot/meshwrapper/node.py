@@ -59,7 +59,7 @@ class Node:
             hasattr(self, "interface")
             and hasattr(self.interface, "myInfo")
             and hasattr(self.interface.myInfo, "my_node_num")
-            and self.num == my_node_num
+            and self.num == self.interface.myInfo.my_node_num
         )
 
     def is_broadcast(self):

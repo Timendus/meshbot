@@ -9,18 +9,21 @@ def register(bot: Chatbot):
             "module": "Radio commands",
             "description": "Get a summary of nodes",
             "function": nodes_info,
+            "channel": True,
         },
         {
             "command": "/NODELIST",
             "module": "Radio commands",
             "description": "Get a list of the nodes I see",
             "function": node_list,
+            "channel": True,
         },
         {
             "prefix": "/SIGNAL",
             "module": "Radio commands",
             "description": "/SIGNAL [<id>]: Get signal report on a node",
             "function": signal_report,
+            "channel": True,
         },
     )
 

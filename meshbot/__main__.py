@@ -28,7 +28,7 @@ for module in [
     "ollama_llm",
     "radio_commands",
 ]:
-    exec(f"from {module} import register as register_{module}")
+    exec(f"from meshbot.{module} import register as register_{module}")
     exec(f"register_{module}(bot)")
 
 

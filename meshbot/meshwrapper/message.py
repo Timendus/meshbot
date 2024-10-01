@@ -48,6 +48,8 @@ class Message:
         if "raw" in message.admin:
             del message.admin["raw"]
 
+        return message
+
     def private_message(self):
         return self.toNode != Everyone
 
