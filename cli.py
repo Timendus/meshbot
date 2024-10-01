@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
+
 from meshbot.meshwrapper import Node, Nodelist, Message
 from meshbot.chatbot import Chatbot
 
@@ -15,7 +17,7 @@ for module in [
     "about",
     "message_box",
     "ollama_llm",
-    # "radio_commands",
+    "radio_commands",
 ]:
     exec(f"from meshbot.{module} import register as register_{module}")
     exec(f"register_{module}(bot)")
@@ -45,6 +47,7 @@ fromNode.snr = 5.0
 fromNode.rssi = -80
 fromNode.hopsAway = 0
 fromNode.send = output
+fromNode.lastHeard = datetime.timestamp(datetime.now())
 
 toNode = Node()
 toNode.num = 2
@@ -55,6 +58,7 @@ toNode.longName = "Meshbot"
 toNode.snr = 6.0
 toNode.rssi = -75
 toNode.hopsAway = 0
+toNode.lastHeard = datetime.timestamp(datetime.now())
 
 nodelist = Nodelist()
 nodelist.add(fromNode)

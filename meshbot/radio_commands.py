@@ -1,24 +1,28 @@
 from .meshwrapper import MeshtasticClient, Message
+from .chatbot import Chatbot
 
 
-def handle(message: Message, meshtasticClient: MeshtasticClient) -> bool:
-    # Only reply to text messages
-    if message.type != "TEXT_MESSAGE_APP":
-        return False
-
-    if message.text.upper().startswith("/SIGNAL"):
-        signal_report(message, meshtasticClient)
-        return True
-
-    match message.text.upper():
-        case "/NODES":
-            nodes_info(message, meshtasticClient)
-        case "/NODELIST":
-            node_list(message, meshtasticClient)
-        case _:
-            return False
-
-    return True
+def register(bot: Chatbot):
+    bot.add_command(
+        {
+            "command": "/NODES",
+            "module": "Radio commands",
+            "description": "Get a summary of nodes",
+            "function": nodes_info,
+        },
+        {
+            "command": "/NODELIST",
+            "module": "Radio commands",
+            "description": "Get a list of the nodes I see",
+            "function": node_list,
+        },
+        {
+            "prefix": "/SIGNAL",
+            "module": "Radio commands",
+            "description": "/SIGNAL [<id>]: Get signal report on a node",
+            "function": signal_report,
+        },
+    )
 
 
 def signal_report(message: Message, meshtasticClient: MeshtasticClient):
