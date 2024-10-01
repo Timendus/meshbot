@@ -23,7 +23,7 @@ def register(bot: Chatbot):
         {
             "command": "/LLM",
             "module": "Ollama LLM",
-            "description": "Have a conversation with the AI",
+            "description": "Start AI conversation",
             "function": start_conversation,
             "channel": True,
         },
