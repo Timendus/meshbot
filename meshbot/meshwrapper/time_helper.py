@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 
 
@@ -30,3 +30,14 @@ def time_ago(timestamp):
     if days == 1:
         return f"one day"
     return f"{str(days)} days"
+
+
+def friendly_date(date):
+    today = datetime.now().date()
+    if date.date() == today:
+        return "Today"
+    if date.date() == today + timedelta(days=1):
+        return "Tomorrow"
+    if date.date() < today + timedelta(days=7):
+        return date.strftime("%a")
+    return date.strftime("%d-%m-%Y")

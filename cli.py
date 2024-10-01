@@ -16,6 +16,7 @@ bot = Chatbot()
 for module in [
     "about",
     "radio_commands",
+    "weather",
     "message_box",
     "ollama_llm",
 ]:
@@ -44,6 +45,7 @@ fromNode.rssi = -80
 fromNode.hopsAway = 0
 fromNode.send = output
 fromNode.lastHeard = datetime.timestamp(datetime.now())
+fromNode.location = [49.911, 9.210]
 
 toNode = Node()
 toNode.num = 2
@@ -55,6 +57,7 @@ toNode.snr = 6.0
 toNode.rssi = -75
 toNode.hopsAway = 0
 toNode.lastHeard = datetime.timestamp(datetime.now())
+toNode.location = [42.428, -4.512]
 
 nodelist = Nodelist()
 nodelist.add(fromNode)

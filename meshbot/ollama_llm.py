@@ -238,9 +238,7 @@ def _get_signal_strength(node: Node) -> str:
 
 
 def _gather_relevant_stats(message: Message) -> dict:
-    meshbot_node = next(
-        (n for n in message.nodelist.nodes.values() if n.is_self()), None
-    )
+    meshbot_node = message.nodelist.get_self()
     stats = {
         "in_channel": not message.private_message(),
         "meshbot": {

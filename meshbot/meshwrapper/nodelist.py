@@ -63,6 +63,9 @@ class Nodelist:
 
         return None
 
+    def get_self(self) -> Node | None:
+        return next((n for n in self.nodes.values() if n.is_self()), None)
+
     def __str__(self):
         output = "Node list\n"
         output += "---------\n"

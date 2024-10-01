@@ -25,6 +25,7 @@ bot = Chatbot()
 for module in [
     "about",
     "radio_commands",
+    "weather",
     "message_box",
     "ollama_llm",
 ]:
