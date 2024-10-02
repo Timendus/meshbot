@@ -4,6 +4,7 @@ from dotenv import dotenv_values
 
 from .meshwrapper import Message, Nodelist, Node
 from .chatbot import Chatbot
+from .open_meteo import fetch_weather, fetch_forecast
 
 config = {
     **dotenv_values(".env"),
@@ -172,6 +173,40 @@ tools = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather at the location of the given node",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "node": {
+                        "type": "string",
+                        "description": "The ID or short name of the node for which to get the current weather, e.g. !9a34ed2b or R3NL",
+                    },
+                },
+                "required": ["node"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather_forecast",
+            "description": "Get a weather forecast for the next six days at the location of the given node",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "node": {
+                        "type": "string",
+                        "description": "The ID or short name of the node for which to get the weather forecast, e.g. !9a34ed2b or R3NL",
+                    },
+                },
+                "required": ["node"],
+            },
+        },
+    },
 ]
 
 
@@ -209,6 +244,10 @@ def _reply_from_ollama(conversation: list, nodelist: Nodelist):
                         return_value = _get_signal_strength(node)
                     case "get_hops":
                         return_value = f"Node {node.to_succinct_string()} is {node.hopsAway} hops away"
+                    case "get_current_weather":
+                        return_value = fetch_weather(node.position)
+                    case "get_weather_forecast":
+                        return_value = fetch_forecast(node.position)
                     case _:
                         assert False, "Invalid function name in function call from LLM"
                 # print("Return value: " + return_value)
