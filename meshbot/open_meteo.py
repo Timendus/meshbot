@@ -1,347 +1,11 @@
 import requests
+import json
 from datetime import datetime
 
 from .meshwrapper.time_helper import friendly_date
 
 
-wmo_codes = {
-    "0": {
-        "day": {
-            "description": "Sunny",
-            "image": "http://openweathermap.org/img/wn/01d@2x.png",
-            "icon": "☀️",
-        },
-        "night": {
-            "description": "Clear",
-            "image": "http://openweathermap.org/img/wn/01n@2x.png",
-            "icon": "🌙",
-        },
-    },
-    "1": {
-        "day": {
-            "description": "Mainly Sunny",
-            "image": "http://openweathermap.org/img/wn/01d@2x.png",
-            "icon": "☀️",
-        },
-        "night": {
-            "description": "Mainly Clear",
-            "image": "http://openweathermap.org/img/wn/01n@2x.png",
-            "icon": "🌙",
-        },
-    },
-    "2": {
-        "day": {
-            "description": "Partly Cloudy",
-            "image": "http://openweathermap.org/img/wn/02d@2x.png",
-            "icon": "⛅️",
-        },
-        "night": {
-            "description": "Partly Cloudy",
-            "image": "http://openweathermap.org/img/wn/02n@2x.png",
-            "icon": "☁️",
-        },
-    },
-    "3": {
-        "day": {
-            "description": "Cloudy",
-            "image": "http://openweathermap.org/img/wn/03d@2x.png",
-            "icon": "☁️",
-        },
-        "night": {
-            "description": "Cloudy",
-            "image": "http://openweathermap.org/img/wn/03n@2x.png",
-            "icon": "☁️",
-        },
-    },
-    "45": {
-        "day": {
-            "description": "Foggy",
-            "image": "http://openweathermap.org/img/wn/50d@2x.png",
-            "icon": "🌫️",
-        },
-        "night": {
-            "description": "Foggy",
-            "image": "http://openweathermap.org/img/wn/50n@2x.png",
-            "icon": "🌫️",
-        },
-    },
-    "48": {
-        "day": {
-            "description": "Rime Fog",
-            "image": "http://openweathermap.org/img/wn/50d@2x.png",
-            "icon": "🌫️",
-        },
-        "night": {
-            "description": "Rime Fog",
-            "image": "http://openweathermap.org/img/wn/50n@2x.png",
-            "icon": "🌫️",
-        },
-    },
-    "51": {
-        "day": {
-            "description": "Light Drizzle",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Light Drizzle",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "53": {
-        "day": {
-            "description": "Drizzle",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Drizzle",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "55": {
-        "day": {
-            "description": "Heavy Drizzle",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Heavy Drizzle",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "56": {
-        "day": {
-            "description": "Light Freezing Drizzle",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Light Freezing Drizzle",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "57": {
-        "day": {
-            "description": "Freezing Drizzle",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Freezing Drizzle",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "61": {
-        "day": {
-            "description": "Light Rain",
-            "image": "http://openweathermap.org/img/wn/10d@2x.png",
-            "icon": "🌦️",
-        },
-        "night": {
-            "description": "Light Rain",
-            "image": "http://openweathermap.org/img/wn/10n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "63": {
-        "day": {
-            "description": "Rain",
-            "image": "http://openweathermap.org/img/wn/10d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Rain",
-            "image": "http://openweathermap.org/img/wn/10n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "65": {
-        "day": {
-            "description": "Heavy Rain",
-            "image": "http://openweathermap.org/img/wn/10d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Heavy Rain",
-            "image": "http://openweathermap.org/img/wn/10n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "66": {
-        "day": {
-            "description": "Light Freezing Rain",
-            "image": "http://openweathermap.org/img/wn/10d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Light Freezing Rain",
-            "image": "http://openweathermap.org/img/wn/10n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "67": {
-        "day": {
-            "description": "Freezing Rain",
-            "image": "http://openweathermap.org/img/wn/10d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Freezing Rain",
-            "image": "http://openweathermap.org/img/wn/10n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "71": {
-        "day": {
-            "description": "Light Snow",
-            "image": "http://openweathermap.org/img/wn/13d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Light Snow",
-            "image": "http://openweathermap.org/img/wn/13n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "73": {
-        "day": {
-            "description": "Snow",
-            "image": "http://openweathermap.org/img/wn/13d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Snow",
-            "image": "http://openweathermap.org/img/wn/13n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "75": {
-        "day": {
-            "description": "Heavy Snow",
-            "image": "http://openweathermap.org/img/wn/13d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Heavy Snow",
-            "image": "http://openweathermap.org/img/wn/13n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "77": {
-        "day": {
-            "description": "Snow Grains",
-            "image": "http://openweathermap.org/img/wn/13d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Snow Grains",
-            "image": "http://openweathermap.org/img/wn/13n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "80": {
-        "day": {
-            "description": "Light Showers",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Light Showers",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "81": {
-        "day": {
-            "description": "Showers",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Showers",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "82": {
-        "day": {
-            "description": "Heavy Showers",
-            "image": "http://openweathermap.org/img/wn/09d@2x.png",
-            "icon": "🌧️",
-        },
-        "night": {
-            "description": "Heavy Showers",
-            "image": "http://openweathermap.org/img/wn/09n@2x.png",
-            "icon": "🌧️",
-        },
-    },
-    "85": {
-        "day": {
-            "description": "Light Snow Showers",
-            "image": "http://openweathermap.org/img/wn/13d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Light Snow Showers",
-            "image": "http://openweathermap.org/img/wn/13n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "86": {
-        "day": {
-            "description": "Snow Showers",
-            "image": "http://openweathermap.org/img/wn/13d@2x.png",
-            "icon": "🌨️",
-        },
-        "night": {
-            "description": "Snow Showers",
-            "image": "http://openweathermap.org/img/wn/13n@2x.png",
-            "icon": "🌨️",
-        },
-    },
-    "95": {
-        "day": {
-            "description": "Thunderstorm",
-            "image": "http://openweathermap.org/img/wn/11d@2x.png",
-            "icon": "🌩️",
-        },
-        "night": {
-            "description": "Thunderstorm",
-            "image": "http://openweathermap.org/img/wn/11n@2x.png",
-            "icon": "🌩️",
-        },
-    },
-    "96": {
-        "day": {
-            "description": "Light Thunderstorms With Hail",
-            "image": "http://openweathermap.org/img/wn/11d@2x.png",
-            "icon": "⛈️",
-        },
-        "night": {
-            "description": "Light Thunderstorms With Hail",
-            "image": "http://openweathermap.org/img/wn/11n@2x.png",
-            "icon": "⛈️",
-        },
-    },
-    "99": {
-        "day": {
-            "description": "Thunderstorm With Hail",
-            "image": "http://openweathermap.org/img/wn/11d@2x.png",
-            "icon": "⛈️",
-        },
-        "night": {
-            "description": "Thunderstorm With Hail",
-            "image": "http://openweathermap.org/img/wn/11n@2x.png",
-            "icon": "⛈️",
-        },
-    },
-}
+wmo_codes = json.loads(open("./meshbot/wmo_codes.json").read())
 
 
 def fetch_weather(position) -> str | None:
@@ -367,22 +31,29 @@ def fetch_weather(position) -> str | None:
             return None
 
         weather = result.json()
-        temp = weather.get("current", {}).get("temperature_2m", None)
-        temp_unit = weather.get("current_units", {}).get("temperature_2m", None)
-        precip = weather.get("current", {}).get("precipitation", None)
-        precip_unit = weather.get("current_units", {}).get("precipitation", None)
-
         weather_code = wmo_codes.get(
-            str(weather.get("current", {}).get("weather_code", None)), None
+            str(weather.get("current", {}).get("weather_code", None)), {}
         ).get(
-            "day" if weather.get("current", {}).get("is_day", 1) == 1 else "night", None
+            "day" if weather.get("current", {}).get("is_day", 1) == 1 else "night", {}
         )
-        icon = weather_code.get("icon", None)
-        description = weather_code.get("description", None)
-        print(weather.get("current_units", {}).get("wind_direction_10m", None))
-        wind = f" Wind: {weather.get('current', {}).get('wind_speed_10m', None)}{weather.get('current_units', {}).get('wind_speed_10m', None)} {wind_direction(weather.get('current', {}).get('wind_direction_10m', None))}"
 
-        return f"{icon + ' ' if icon else ''}It's {temp}{temp_unit}. {description + '.' if description else ''}{' '+ str(precip) + precip_unit if precip > 0 else ''}{wind}"
+        icon = weather_code.get("icon", "")
+        description = weather_code.get("description", "")
+        temp = weather.get("current", {}).get("temperature_2m", "")
+        temp_unit = weather.get("current_units", {}).get("temperature_2m", "")
+        precip = weather.get("current", {}).get("precipitation", "")
+        precip_unit = weather.get("current_units", {}).get("precipitation", "")
+        wind_speed = weather.get("current", {}).get("wind_speed_10m", "")
+        wind_speed_unit = weather.get("current_units", {}).get("wind_speed_10m", "")
+        wind_dir = wind_direction(
+            weather.get("current", {}).get("wind_direction_10m", None)
+        )
+
+        return f"""🌡️  {temp}{temp_unit}
+{icon}  {description}
+💧  {precip}{precip_unit}
+🌬️  {wind_speed}{wind_speed_unit} {wind_dir}
+"""
     except Exception as e:
         print(e)
         return None
@@ -416,13 +87,39 @@ def fetch_forecast(position) -> str | None:
         daily = forecast.get("daily", None)
         units = forecast.get("daily_units", None)
 
+        # Rewrite dictionary of arrays to array of dictionaries, rename some
+        # things, add some units. In short, do all the pre-processing.
+        structured_forecast = {}
+        for key, value in daily.items():
+            if key == "time":
+                key = "day"
+            if key == "weather_code":
+                key = "icon"
+            if type(value) == list:
+                for i, v in enumerate(value):
+                    if i not in structured_forecast:
+                        structured_forecast[i] = {}
+                    if key == "day":
+                        v = friendly_date(datetime.strptime(v, "%Y-%m-%d"))
+                    if key == "icon":
+                        weather_code = wmo_codes.get(str(v), {}).get("day", {})
+                        v = weather_code.get("icon", "")
+                        structured_forecast[i]["description"] = weather_code.get(
+                            "description", ""
+                        )
+                    if key == "wind_direction_10m_dominant":
+                        v = wind_direction(v)
+                    else:
+                        v = f"{v}{units.get(key, '')}"
+                    structured_forecast[i][key] = v
+
         forecast_string = ""
-        for i, date in enumerate(daily.get("time", [])[:6]):
-            date = datetime.strptime(date, "%Y-%m-%d")
-            forecast_string += f"""{friendly_date(date)} - {wmo_codes.get(str(daily.get("weather_code", "")[i]), {}).get("day", {}).get("icon", "")}
-Temp: min {daily.get("temperature_2m_min", "")[i]}{units.get("temperature_2m_min", "")} - max {daily.get("temperature_2m_max", "")[i]}{units.get("temperature_2m_max", "")}
-Precip: {daily.get("precipitation_sum", "")[i]}{units.get("precipitation_sum", "")} - {daily.get("precipitation_probability_max", "")[i]}{units.get("precipitation_probability_max", "")} chance
-Wind: {daily.get("wind_speed_10m_max", "")[i]}{units.get("wind_speed_10m_max", "")} {wind_direction(daily.get("wind_direction_10m_dominant", "")[i])}
+        for day in list(structured_forecast.values())[:6]:
+            forecast_string += f"""▬▬ {day["day"]} ▬▬
+🌡️  {day["temperature_2m_max"]} / {day["temperature_2m_min"]}
+{day["icon"]}  {day["description"]}
+💧  {day["precipitation_sum"]} {day["precipitation_probability_max"]}
+🌬️  {day["wind_speed_10m_max"]} {day["wind_direction_10m_dominant"]}
 
 """
 
