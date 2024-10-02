@@ -435,22 +435,22 @@ Wind: {daily.get("wind_speed_10m_max", "")[i]}{units.get("wind_speed_10m_max", "
 def wind_direction(direction) -> str:
     match direction:
         case dir if 0 <= dir < 22.5:
-            return "↑"
-        case dir if 22.5 <= dir < 67.5:
-            return "↗"
-        case dir if 67.5 <= dir < 112.5:
-            return "→"
-        case dir if 112.5 <= dir < 157.5:
-            return "↘"
-        case dir if 157.5 <= dir < 202.5:
             return "↓"
-        case dir if 202.5 <= dir < 247.5:
+        case dir if 22.5 <= dir < 67.5:
             return "↙"
-        case dir if 247.5 <= dir < 292.5:
+        case dir if 67.5 <= dir < 112.5:
             return "←"
-        case dir if 292.5 <= dir < 337.5:
+        case dir if 112.5 <= dir < 157.5:
             return "↖"
-        case dir if 337.5 <= dir < 360:
+        case dir if 157.5 <= dir < 202.5:
             return "↑"
+        case dir if 202.5 <= dir < 247.5:
+            return "↗"
+        case dir if 247.5 <= dir < 292.5:
+            return "→"
+        case dir if 292.5 <= dir < 337.5:
+            return "↘"
+        case dir if 337.5 <= dir < 360:
+            return "↓"
         case _:
             return ""
