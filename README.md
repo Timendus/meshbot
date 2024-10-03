@@ -10,8 +10,9 @@ in common with something like a Slack / Telegram / Discord bot.
 - Mail box / message box for communicating with other Mestastic users. These
   commands only work in direct messages with the bot, not in channels for
   obvious reasons.
-- Querying the bot for signal reports, nodes it currently sees and nodes it has
-  seen.
+- Ask the bot for signal reports, nodes it currently sees and nodes it has seen.
+- Ask the bot for weather reports and forecasts in your area from
+  [open-meteo.com](https://open-meteo.com/)
 - Talk to a self-hosted LLM using [Ollama](https://ollama.com/).
 
 Some of these things are being demonstrated in this screenshot:
