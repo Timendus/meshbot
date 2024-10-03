@@ -161,10 +161,12 @@ def notify_user(message: Message):
     if message.type == "ROUTING_APP":
         return
 
-    _store_welcome_message(message.fromNode)
-    stats = _user_stats(message.fromNode)
+    # Do we have a message box?
+    if message.fromNode.id not in messageStore:
+        return
 
-    # No new messages, nothing to notify
+    # Do we have new messages?
+    stats = _user_stats(message.fromNode)
     if stats["numUnread"] == 0:
         return
 
