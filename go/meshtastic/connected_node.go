@@ -3,7 +3,6 @@ package meshtastic
 import (
 	"io"
 	"log"
-	"os"
 	"time"
 
 	"buf.build/gen/go/meshtastic/protobufs/protocolbuffers/go/meshtastic"
@@ -11,23 +10,15 @@ import (
 
 type ConnectedNode struct {
 	stream          io.ReadWriteCloser
-	logFile         io.WriteCloser
 	firmwareVersion string
 	channels        []channel
 	node            node
 }
 
-func NewConnectedNode(stream io.ReadWriteCloser, debugFile string) (*ConnectedNode, error) {
-	// Create a debug file for this device
-	debugSink, err := os.Create(debugFile)
-	if err != nil {
-		return nil, err
-	}
-
+func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
 	// Create the new connected node
 	newNode := ConnectedNode{
-		stream:  stream,
-		logFile: debugSink,
+		stream: stream,
 		node: node{
 			shortName: "UNKN",
 			longName:  "Unknown node",
@@ -37,7 +28,7 @@ func NewConnectedNode(stream io.ReadWriteCloser, debugFile string) (*ConnectedNo
 	}
 
 	// Spin up a goroutine to read messages from the device
-	go newNode.ReadMessages(stream, debugSink)
+	go newNode.ReadMessages(stream)
 
 	// Wake the device
 	if err := wakeDevice(stream); err != nil {
@@ -57,11 +48,7 @@ func NewConnectedNode(stream io.ReadWriteCloser, debugFile string) (*ConnectedNo
 }
 
 func (n *ConnectedNode) Close() error {
-	err := n.stream.Close()
-	if err != nil {
-		return err
-	}
-	return n.logFile.Close()
+	return n.stream.Close()
 }
 
 func (n *ConnectedNode) String() string {
@@ -78,11 +65,12 @@ func (n *ConnectedNode) SendMessage(message meshtastic.ToRadio_Packet) error {
 	return nil
 }
 
-func (n *ConnectedNode) ReadMessages(stream io.ReadWriteCloser, debugSink *os.File) error {
+func (n *ConnectedNode) ReadMessages(stream io.ReadWriteCloser) error {
 	for {
-		packet, err := readMessage(stream, debugSink)
+		packet, err := readMessage(stream)
 		if err != nil {
-			debugSink.WriteString("Error: " + err.Error() + "\n")
+			log.Println("Error: " + err.Error())
+			continue
 		}
 
 		switch packet.PayloadVariant.(type) {

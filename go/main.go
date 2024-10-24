@@ -39,7 +39,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(serialPort, "serial-log.txt")
+		node, err = meshtastic.NewConnectedNode(serialPort)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -49,7 +49,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(tcpPort, "tcp-log.txt")
+		node, err = meshtastic.NewConnectedNode(tcpPort)
 		if err != nil {
 			log.Fatal(err)
 		}
