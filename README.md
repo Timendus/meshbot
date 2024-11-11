@@ -1,3 +1,5 @@
+> Warning: this bot currently doesn't work properly with firmware 2.5+. It has trouble getting delivery acknowledgements, which leads to all kinds of issues. I'm working on a rewrite (slowly) and don't plan on supporting this bot much anymore, but feel free to open a pull request if you know how to fix this issue.
+
 # Meshbot
 
 A simple bot for use with Meshtastic. I know the name isn't very original 😄
