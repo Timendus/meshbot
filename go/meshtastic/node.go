@@ -6,6 +6,7 @@ import (
 	"unicode/utf8"
 
 	"buf.build/gen/go/meshtastic/protobufs/protocolbuffers/go/meshtastic"
+	"github.com/timendus/meshbot/meshtastic/helpers"
 )
 
 type Node struct {
@@ -111,7 +112,7 @@ func (n *Node) VerboseString() string {
 
 	hopsAway := ""
 	if n.HopsAway > 0 {
-		hopsAway = fmt.Sprintf(", %d %s away", n.HopsAway, pluralize("hop", int(n.HopsAway)))
+		hopsAway = fmt.Sprintf(", %d %s away", n.HopsAway, helpers.Pluralize("hop", int(n.HopsAway)))
 	}
 
 	return fmt.Sprintf(
@@ -119,7 +120,7 @@ func (n *Node) VerboseString() string {
 		n.String(),
 		hardware,
 		role,
-		timeAgo(n.LastHeard),
+		helpers.TimeAgo(n.LastHeard),
 		snr,
 		hopsAway,
 	)

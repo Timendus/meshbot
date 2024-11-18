@@ -1,4 +1,4 @@
-package meshtastic
+package helpers
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func timeAgo(timestamp time.Time) string {
+func TimeAgo(timestamp time.Time) string {
 	seconds := int(time.Since(timestamp).Seconds())
 
 	if seconds == 1 {

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"buf.build/gen/go/meshtastic/protobufs/protocolbuffers/go/meshtastic"
+	"github.com/timendus/meshbot/meshtastic/helpers"
 )
 
 const (
@@ -84,6 +85,6 @@ func (m *Message) radioMetricsString() string {
 		"\033[90m(%s%d %s away)\033[0m",
 		snr,
 		m.hopsAway,
-		pluralize("hop", int(m.hopsAway)),
+		helpers.Pluralize("hop", int(m.hopsAway)),
 	)
 }

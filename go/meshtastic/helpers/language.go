@@ -1,6 +1,6 @@
-package meshtastic
+package helpers
 
-func pluralize(word string, count int) string {
+func Pluralize(word string, count int) string {
 	if count == 1 {
 		return word
 	}
