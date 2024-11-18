@@ -10,20 +10,18 @@ import (
 )
 
 type ConnectedNode struct {
-	stream            io.ReadWriteCloser
-	connectedCallback func(ConnectedNode)
-	messageCallback   func(Message)
-	FirmwareVersion   string
-	Channels          []channel
-	Node              *Node
+	stream          io.ReadWriteCloser
+	Connected       bool
+	FirmwareVersion string
+	Channels        []channel
+	Node            *Node
 }
 
-func NewConnectedNode(stream io.ReadWriteCloser, connected func(ConnectedNode), message func(Message)) (*ConnectedNode, error) {
+func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
 	// Create the new connected node
 	newNode := ConnectedNode{
-		stream:            stream,
-		connectedCallback: connected,
-		messageCallback:   message,
+		stream:    stream,
+		Connected: false,
 		Node: &Node{
 			ShortName: "UNKN",
 			LongName:  "Unknown node",
@@ -54,6 +52,8 @@ func NewConnectedNode(stream io.ReadWriteCloser, connected func(ConnectedNode), 
 }
 
 func (n *ConnectedNode) Close() error {
+	n.Connected = false
+	NodeEvents.publish("node-disconnected", *n)
 	return n.stream.Close()
 }
 
@@ -84,7 +84,8 @@ func (n *ConnectedNode) ReadMessages(stream io.ReadCloser) error {
 
 		switch packet.PayloadVariant.(type) {
 		case *meshtastic.FromRadio_ConfigCompleteId:
-			n.connectedCallback(*n)
+			n.Connected = true
+			NodeEvents.publish("node-connected", *n)
 		case *meshtastic.FromRadio_MyInfo:
 			n.Node.id = packet.GetMyInfo().MyNodeNum
 			n.Node.NodeList.nodes[n.Node.id] = n.Node
@@ -217,5 +218,5 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		log.Println("Warning: Unknown mesh packet:", meshPacket.String())
 	}
 
-	n.messageCallback(message)
+	MessageEvents.publish("all-messages", message)
 }

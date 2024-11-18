@@ -16,6 +16,9 @@ import (
 func main() {
 	log.Println("Starting Meshed Potatoes!")
 
+	meshtastic.MessageEvents.Subscribe("all-messages", message)
+	meshtastic.NodeEvents.Subscribe("node-connected", connected)
+
 	// Attempt to auto-detect Meshtestic device on a serial port. Otherwise,
 	// connect over TCP.
 
@@ -40,7 +43,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(serialPort, connected, message)
+		node, err = meshtastic.NewConnectedNode(serialPort)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -50,7 +53,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(tcpPort, connected, message)
+		node, err = meshtastic.NewConnectedNode(tcpPort)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -64,7 +67,7 @@ func main() {
 }
 
 func connected(node meshtastic.ConnectedNode) {
-	fmt.Println("Connected to a node!")
+	log.Println("Connected to a node!")
 	log.Println("This is me: " + node.String())
 	log.Println("Node list: \n" + node.Node.NodeList.String())
 	log.Println("Channel list:")
