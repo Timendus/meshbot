@@ -4,6 +4,7 @@ package main
 // https://buf.build/meshtastic/protobufs/docs/main:meshtastic#meshtastic.ToRadio
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -39,17 +40,17 @@ func main() {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(serialPort)
+		node, err = meshtastic.NewConnectedNode(serialPort, connected, message)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		tcpPort, err := net.Dial("tcp", "meshtastic.local:4403")
+		tcpPort, err := net.Dial("tcp", "meshtastic.thuis:4403")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(tcpPort)
+		node, err = meshtastic.NewConnectedNode(tcpPort, connected, message)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -60,4 +61,18 @@ func main() {
 	for {
 		time.Sleep(100 * time.Millisecond)
 	}
+}
+
+func connected(node meshtastic.ConnectedNode) {
+	fmt.Println("Connected to a node!")
+	log.Println("This is me: " + node.String())
+	log.Println("Node list: \n" + node.Node.NodeList.String())
+	log.Println("Channel list:")
+	for _, channel := range node.Channels {
+		log.Println("   " + channel.String())
+	}
+}
+
+func message(message meshtastic.Message) {
+	fmt.Println(message.String())
 }

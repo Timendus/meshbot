@@ -6,12 +6,12 @@ import (
 )
 
 type nodeList struct {
-	nodes map[uint32]node
+	nodes map[uint32]Node
 }
 
 func NewNodeList() nodeList {
 	return nodeList{
-		nodes: make(map[uint32]node),
+		nodes: make(map[uint32]Node),
 	}
 }
 
@@ -23,15 +23,15 @@ func (n *nodeList) String() string {
 	return nodes
 }
 
-func (n *nodeList) sortedNodes() []node {
-	nodes := make([]node, 0, len(n.nodes))
+func (n *nodeList) sortedNodes() []Node {
+	nodes := make([]Node, 0, len(n.nodes))
 	for _, node := range n.nodes {
 		nodes = append(nodes, node)
 	}
-	slices.SortFunc(nodes, func(a, b node) int {
+	slices.SortFunc(nodes, func(a, b Node) int {
 		return cmp.Or(
-			cmp.Compare(a.hopsAway, b.hopsAway),
-			-cmp.Compare(a.lastHeard.Unix(), b.lastHeard.Unix()),
+			cmp.Compare(a.HopsAway, b.HopsAway),
+			-cmp.Compare(a.LastHeard.Unix(), b.LastHeard.Unix()),
 		)
 	})
 	return nodes
