@@ -19,19 +19,22 @@ type Node struct {
 	LastHeard     time.Time
 	HopsAway      uint32
 	NodeList      nodeList
-	Position      *position
+	Position      []*position
 	IsLicensed    bool
-	deviceMetrics *deviceMetrics
+	deviceMetrics []*meshtastic.DeviceMetrics
+	connected     bool
 }
 
 func NewNode(info *meshtastic.NodeInfo) *Node {
 	node := Node{
-		id:         info.Num,
-		HopsAway:   0,
-		ShortName:  "UNKN",
-		LongName:   "Unknown node",
-		HwModel:    meshtastic.HardwareModel_UNSET,
-		IsLicensed: false,
+		id:            info.Num,
+		HopsAway:      0,
+		ShortName:     "UNKN",
+		LongName:      "Unknown node",
+		HwModel:       meshtastic.HardwareModel_UNSET,
+		IsLicensed:    false,
+		Position:      make([]*position, 0),
+		deviceMetrics: make([]*meshtastic.DeviceMetrics, 0),
 	}
 
 	node.Update(info)
@@ -45,8 +48,14 @@ func (n *Node) Update(info *meshtastic.NodeInfo) {
 
 	n.snr = info.Snr
 	n.LastHeard = time.Unix(int64(info.LastHeard), 0)
-	n.Position = NewPosition(info.Position)
-	n.deviceMetrics = NewDeviceMetrics(info.DeviceMetrics)
+
+	if info.Position != nil {
+		n.Position = append(n.Position, NewPosition(info.Position))
+	}
+
+	if info.DeviceMetrics != nil {
+		n.deviceMetrics = append(n.deviceMetrics, info.DeviceMetrics)
+	}
 
 	if info.HopsAway != nil {
 		n.HopsAway = *info.HopsAway
@@ -62,10 +71,12 @@ func (n *Node) Update(info *meshtastic.NodeInfo) {
 	}
 }
 
-func (n *Node) String(color ...*string) string {
+func (n *Node) String() string {
 	var col string
-	if len(color) > 0 && color[0] != nil {
-		col = *color[0]
+	if n.connected {
+		col = "92"
+	} else if n.id == Broadcast.id || n.id == Unknown.id {
+		col = "95"
 	} else if n.HopsAway == 0 {
 		col = "96"
 	} else {
