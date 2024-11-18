@@ -12,30 +12,29 @@ import (
 type Node struct {
 	ShortName     string
 	LongName      string
-	id            uint32
-	macAddr       []byte
+	Id            uint32
 	HwModel       meshtastic.HardwareModel
 	Role          meshtastic.Config_DeviceConfig_Role
-	snr           float32
+	Snr           float32
 	LastHeard     time.Time
 	HopsAway      uint32
 	NodeList      nodeList
 	Position      []*position
 	IsLicensed    bool
-	deviceMetrics []*meshtastic.DeviceMetrics
-	connected     bool
+	DeviceMetrics []*meshtastic.DeviceMetrics
+	Connected     bool
 }
 
 func NewNode(info *meshtastic.NodeInfo) *Node {
 	node := Node{
-		id:            info.Num,
+		Id:            info.Num,
 		HopsAway:      0,
 		ShortName:     "UNKN",
 		LongName:      "Unknown node",
 		HwModel:       meshtastic.HardwareModel_UNSET,
 		IsLicensed:    false,
 		Position:      make([]*position, 0),
-		deviceMetrics: make([]*meshtastic.DeviceMetrics, 0),
+		DeviceMetrics: make([]*meshtastic.DeviceMetrics, 0),
 	}
 
 	node.Update(info)
@@ -43,11 +42,11 @@ func NewNode(info *meshtastic.NodeInfo) *Node {
 }
 
 func (n *Node) Update(info *meshtastic.NodeInfo) {
-	if info == nil || info.Num != n.id {
+	if info == nil || info.Num != n.Id {
 		return
 	}
 
-	n.snr = info.Snr
+	n.Snr = info.Snr
 	n.LastHeard = time.Unix(int64(info.LastHeard), 0)
 
 	if info.Position != nil {
@@ -55,7 +54,7 @@ func (n *Node) Update(info *meshtastic.NodeInfo) {
 	}
 
 	if info.DeviceMetrics != nil {
-		n.deviceMetrics = append(n.deviceMetrics, info.DeviceMetrics)
+		n.DeviceMetrics = append(n.DeviceMetrics, info.DeviceMetrics)
 	}
 
 	if info.HopsAway != nil {
@@ -65,7 +64,6 @@ func (n *Node) Update(info *meshtastic.NodeInfo) {
 	if info.User != nil {
 		n.ShortName = info.User.ShortName
 		n.LongName = info.User.LongName
-		n.macAddr = info.User.Macaddr
 		n.HwModel = info.User.HwModel
 		n.Role = info.User.Role
 		n.IsLicensed = info.User.IsLicensed
@@ -74,9 +72,9 @@ func (n *Node) Update(info *meshtastic.NodeInfo) {
 
 func (n *Node) String() string {
 	var col string
-	if n.connected {
+	if n.Connected {
 		col = "92"
-	} else if n.id == Broadcast.id || n.id == Unknown.id {
+	} else if n.Id == Broadcast.Id || n.Id == Unknown.Id {
 		col = "95"
 	} else if n.HopsAway == 0 {
 		col = "96"
@@ -106,8 +104,8 @@ func (n *Node) VerboseString() string {
 	role := n.Role.String()
 
 	snr := ""
-	if n.snr != 0 {
-		snr = fmt.Sprintf(", SNR %.2f", n.snr)
+	if n.Snr != 0 {
+		snr = fmt.Sprintf(", SNR %.2f", n.Snr)
 	}
 
 	hopsAway := ""
@@ -127,5 +125,5 @@ func (n *Node) VerboseString() string {
 }
 
 func (n *Node) IDExpression() string {
-	return fmt.Sprintf("!%x", n.id)
+	return fmt.Sprintf("!%x", n.Id)
 }

@@ -78,4 +78,8 @@ func connected(node meshtastic.ConnectedNode) {
 
 func message(message meshtastic.Message) {
 	fmt.Println(message.String())
+
+	if message.ToNode.Id != meshtastic.Broadcast.Id {
+		message.Reply("Hello, world!")
+	}
 }

@@ -10,13 +10,13 @@ type nodeList struct {
 }
 
 var Broadcast = Node{
-	id:        0xFFFFFFFF,
+	Id:        0xFFFFFFFF,
 	ShortName: "CAST",
 	LongName:  "Everyone",
 }
 
 var Unknown = Node{
-	id:        0x00000000,
+	Id:        0x00000000,
 	ShortName: "UNKN",
 	LongName:  "Unknown",
 }
@@ -26,8 +26,8 @@ func NewNodeList() nodeList {
 		nodes: make(map[uint32]*Node),
 	}
 
-	list.nodes[Broadcast.id] = &Broadcast
-	list.nodes[Unknown.id] = &Unknown
+	list.nodes[Broadcast.Id] = &Broadcast
+	list.nodes[Unknown.Id] = &Unknown
 
 	return list
 }
@@ -35,7 +35,7 @@ func NewNodeList() nodeList {
 func (n *nodeList) String() string {
 	nodes := ""
 	for _, node := range n.sortedNodes() {
-		if node.id != Broadcast.id && node.id != Unknown.id {
+		if node.Id != Broadcast.Id && node.Id != Unknown.Id {
 			nodes += node.VerboseString() + "\n"
 		}
 	}
