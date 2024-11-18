@@ -10,31 +10,30 @@ import (
 )
 
 type Node struct {
-	ShortName     string
-	LongName      string
-	Id            uint32
-	HwModel       meshtastic.HardwareModel
-	Role          meshtastic.Config_DeviceConfig_Role
-	Snr           float32
-	LastHeard     time.Time
-	HopsAway      uint32
-	NodeList      nodeList
-	Position      []*position
-	IsLicensed    bool
-	DeviceMetrics []*meshtastic.DeviceMetrics
-	Connected     bool
+	ShortName        string
+	LongName         string
+	Id               uint32
+	HwModel          meshtastic.HardwareModel
+	Role             meshtastic.Config_DeviceConfig_Role
+	Snr              float32
+	LastHeard        time.Time
+	HopsAway         uint32
+	NodeList         nodeList
+	IsLicensed       bool
+	ReceivedMessages []*Message
+	Connected        bool
+	PublicKey        []byte
 }
 
 func NewNode(info *meshtastic.NodeInfo) *Node {
 	node := Node{
-		Id:            info.Num,
-		HopsAway:      0,
-		ShortName:     "UNKN",
-		LongName:      "Unknown node",
-		HwModel:       meshtastic.HardwareModel_UNSET,
-		IsLicensed:    false,
-		Position:      make([]*position, 0),
-		DeviceMetrics: make([]*meshtastic.DeviceMetrics, 0),
+		Id:               info.Num,
+		HopsAway:         0,
+		ShortName:        "UNKN",
+		LongName:         "Unknown node",
+		HwModel:          meshtastic.HardwareModel_UNSET,
+		IsLicensed:       false,
+		ReceivedMessages: make([]*Message, 0),
 	}
 
 	node.Update(info)
@@ -50,11 +49,29 @@ func (n *Node) Update(info *meshtastic.NodeInfo) {
 	n.LastHeard = time.Unix(int64(info.LastHeard), 0)
 
 	if info.Position != nil {
-		n.Position = append(n.Position, NewPosition(info.Position))
+		// TODO: move this to connected_node, I think. Because we don't have the
+		// receiving node here. Does that even matter..?
+		n.ReceivedMessages = append(n.ReceivedMessages, &Message{
+			FromNode:      n,
+			ToNode:        &Broadcast,
+			ReceivingNode: nil,
+			Timestamp:     time.Unix(int64(info.LastHeard), 0),
+			MessageType:   MESSAGE_TYPE_POSITION,
+			Position:      NewPosition(info.Position),
+		})
 	}
 
 	if info.DeviceMetrics != nil {
-		n.DeviceMetrics = append(n.DeviceMetrics, info.DeviceMetrics)
+		// TODO: move this to connected_node, I think. Because we don't have the
+		// receiving node here. Does that even matter..?
+		n.ReceivedMessages = append(n.ReceivedMessages, &Message{
+			FromNode:      n,
+			ToNode:        &Broadcast,
+			ReceivingNode: nil,
+			Timestamp:     time.Unix(int64(info.LastHeard), 0),
+			MessageType:   MESSAGE_TYPE_TELEMETRY_DEVICE,
+			DeviceMetrics: info.DeviceMetrics,
+		})
 	}
 
 	if info.HopsAway != nil {
@@ -67,6 +84,7 @@ func (n *Node) Update(info *meshtastic.NodeInfo) {
 		n.HwModel = info.User.HwModel
 		n.Role = info.User.Role
 		n.IsLicensed = info.User.IsLicensed
+		n.PublicKey = info.User.PublicKey
 	}
 }
 

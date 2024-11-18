@@ -135,8 +135,13 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 
 	toNode := n.Node.NodeList.nodes[meshPacket.To]
 	fromNode := n.Node.NodeList.nodes[meshPacket.From]
-	fromNode.Snr = meshPacket.RxSnr
 	fromNode.HopsAway = hops
+	if hops == 0 {
+		// Assumption: the packet RxSnr is the signal quality of the received
+		// packet, which may have hopped through other nodes. So only update
+		// this node's SNR if we haven't hopped yet.
+		fromNode.Snr = meshPacket.RxSnr
+	}
 
 	message := Message{
 		FromNode:      fromNode,
@@ -156,13 +161,14 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 			log.Println("Error: Could not unmarshall NodeInfo User mesh packet: " + err.Error())
 			return
 		}
-		log.Println("Got Node Info:", result.String())
-
 		fromNode.ShortName = result.ShortName
 		fromNode.LongName = result.LongName
 		fromNode.HwModel = result.HwModel
 		fromNode.Role = result.Role
 		fromNode.IsLicensed = result.IsLicensed
+		fromNode.PublicKey = result.PublicKey
+		message.MessageType = MESSAGE_TYPE_NODE_INFO
+
 	case meshtastic.PortNum_TELEMETRY_APP:
 		result := meshtastic.Telemetry{}
 		err := proto.Unmarshal(payload, &result)
@@ -176,17 +182,23 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 			message.DeviceMetrics = result.GetDeviceMetrics()
 		case *meshtastic.Telemetry_EnvironmentMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_ENVIRONMENT
+			message.EnvironmentMetrics = result.GetEnvironmentMetrics()
 		case *meshtastic.Telemetry_HealthMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_HEALTH
+			message.HealthMetrics = result.GetHealthMetrics()
 		case *meshtastic.Telemetry_AirQualityMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_AIR_QUALITY
+			message.AirQualityMetrics = result.GetAirQualityMetrics()
 		case *meshtastic.Telemetry_PowerMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_POWER
+			message.PowerMetrics = result.GetPowerMetrics()
 		case *meshtastic.Telemetry_LocalStats:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_LOCAL_STATS
+			message.LocalStats = result.GetLocalStats()
 		default:
 			log.Println("Warning: Unknown telemetry variant:", result.String())
 		}
+
 	case meshtastic.PortNum_POSITION_APP:
 		result := meshtastic.Position{}
 		err := proto.Unmarshal(payload, &result)
@@ -196,7 +208,7 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		}
 		message.MessageType = MESSAGE_TYPE_POSITION
 		message.Position = NewPosition(&result)
-		fromNode.Position = append(fromNode.Position, message.Position)
+
 	case meshtastic.PortNum_NEIGHBORINFO_APP:
 		result := meshtastic.NeighborInfo{}
 		err := proto.Unmarshal(payload, &result)
@@ -206,17 +218,21 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		}
 		message.MessageType = MESSAGE_TYPE_NEIGHBOR_INFO
 		message.NeighborInfo = &result
+
 	case meshtastic.PortNum_TEXT_MESSAGE_APP:
 		message.MessageType = MESSAGE_TYPE_TEXT_MESSAGE
 		message.Text = string(payload)
+
 	case meshtastic.PortNum_ROUTING_APP:
 		if meshPacket.GetDecoded() != nil {
 			log.Println("Ack for message with ID", meshPacket.GetDecoded().RequestId, "from", fromNode.String())
 		}
 		return
+
 	default:
 		log.Println("Warning: Unknown mesh packet:", meshPacket.String())
 	}
 
+	fromNode.ReceivedMessages = append(fromNode.ReceivedMessages, &message)
 	MessageEvents.publish("all-messages", message)
 }

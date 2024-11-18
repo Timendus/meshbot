@@ -12,6 +12,7 @@ import (
 
 const (
 	MESSAGE_TYPE_TEXT_MESSAGE = iota
+	MESSAGE_TYPE_NODE_INFO
 	MESSAGE_TYPE_POSITION
 	MESSAGE_TYPE_NEIGHBOR_INFO
 	MESSAGE_TYPE_TELEMETRY_DEVICE
@@ -27,14 +28,21 @@ type Message struct {
 	FromNode      *Node
 	ToNode        *Node
 	ReceivingNode *ConnectedNode
-	Timestamp     time.Time
-	MessageType   int
-	Text          string
-	DeviceMetrics *meshtastic.DeviceMetrics
-	NeighborInfo  *meshtastic.NeighborInfo
-	Position      *position
-	Snr           float32
-	HopsAway      uint32
+
+	Timestamp time.Time
+	Snr       float32
+	HopsAway  uint32
+
+	MessageType        int
+	Text               string
+	DeviceMetrics      *meshtastic.DeviceMetrics
+	EnvironmentMetrics *meshtastic.EnvironmentMetrics
+	HealthMetrics      *meshtastic.HealthMetrics
+	AirQualityMetrics  *meshtastic.AirQualityMetrics
+	PowerMetrics       *meshtastic.PowerMetrics
+	LocalStats         *meshtastic.LocalStats
+	NeighborInfo       *meshtastic.NeighborInfo
+	Position           *position
 }
 
 func (m *Message) Reply(message string) {
