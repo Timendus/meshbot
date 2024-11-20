@@ -3,9 +3,11 @@ package meshtastic
 import (
 	"io"
 	"log"
+	"strconv"
 	"time"
 
 	"buf.build/gen/go/meshtastic/protobufs/protocolbuffers/go/meshtastic"
+	"github.com/timendus/meshbot/meshtastic/helpers"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -35,7 +37,7 @@ func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
 	}
 
 	// Spin up a goroutine to read messages from the device
-	go newNode.ReadMessages(stream)
+	go newNode.readMessages(stream)
 
 	// Wake the device
 	if err := wakeDevice(stream); err != nil {
@@ -73,7 +75,7 @@ func (n *ConnectedNode) SendMessage(message meshtastic.ToRadio_Packet) error {
 	return nil
 }
 
-func (n *ConnectedNode) ReadMessages(stream io.ReadCloser) error {
+func (n *ConnectedNode) readMessages(stream io.ReadCloser) error {
 	for {
 		packet, err := readMessage(stream)
 		if err != nil {
@@ -242,6 +244,8 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		}
 		message.MessageType = MESSAGE_TYPE_NEIGHBOR_INFO
 		message.NeighborInfo = &result
+		helpers.Assert(result.NodeId == meshPacket.From, "I don't understand this format well enough: received "+message.String()+" but it has NodeId "+strconv.Itoa(int(result.NodeId)))
+		fromNode.Neighbors = NewNeighbourList(&n.NodeList, meshPacket.RxTime, result.Neighbors)
 		MessageEvents.publish("neighbor info", message)
 
 	case meshtastic.PortNum_TEXT_MESSAGE_APP:

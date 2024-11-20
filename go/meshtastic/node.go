@@ -22,6 +22,7 @@ type Node struct {
 	ReceivedMessages []*Message
 	Connected        bool
 	PublicKey        []byte
+	Neighbors        NeighborList
 }
 
 func NewNode(info *meshtastic.NodeInfo) *Node {
@@ -33,6 +34,7 @@ func NewNode(info *meshtastic.NodeInfo) *Node {
 		HwModel:          meshtastic.HardwareModel_UNSET,
 		IsLicensed:       false,
 		ReceivedMessages: make([]*Message, 0),
+		Neighbors:        make(NeighborList, 0),
 	}
 
 	node.Update(info)
