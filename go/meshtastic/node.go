@@ -18,7 +18,6 @@ type Node struct {
 	Snr              float32
 	LastHeard        time.Time
 	HopsAway         uint32
-	NodeList         nodeList
 	IsLicensed       bool
 	ReceivedMessages []*Message
 	Connected        bool

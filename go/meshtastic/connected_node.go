@@ -15,6 +15,7 @@ type ConnectedNode struct {
 	FirmwareVersion string
 	Channels        []channel
 	Node            *Node
+	NodeList        nodeList
 	Acks            map[uint32]chan bool
 }
 
@@ -23,13 +24,13 @@ func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
 	newNode := ConnectedNode{
 		stream:    stream,
 		Connected: false,
+		NodeList:  NewNodeList(),
 		Acks:      make(map[uint32]chan bool),
 		Node: &Node{
 			ShortName: "UNKN",
 			LongName:  "Unknown node",
 			Id:        0,
 			Connected: true,
-			NodeList:  NewNodeList(),
 		},
 	}
 
@@ -90,7 +91,7 @@ func (n *ConnectedNode) ReadMessages(stream io.ReadCloser) error {
 			NodeEvents.publish("connected", *n)
 		case *meshtastic.FromRadio_MyInfo:
 			n.Node.Id = packet.GetMyInfo().MyNodeNum
-			n.Node.NodeList.nodes[n.Node.Id] = n.Node
+			n.NodeList.nodes[n.Node.Id] = n.Node
 		case *meshtastic.FromRadio_Metadata:
 			n.FirmwareVersion = packet.GetMetadata().FirmwareVersion
 		case *meshtastic.FromRadio_NodeInfo:
@@ -112,9 +113,9 @@ func (n *ConnectedNode) ReadMessages(stream io.ReadCloser) error {
 
 func (n *ConnectedNode) parseNodeInfo(nodeInfo *meshtastic.NodeInfo) {
 	// Create or update the node that this info relates to
-	relevantNode, exists := n.Node.NodeList.nodes[nodeInfo.Num]
+	relevantNode, exists := n.NodeList.nodes[nodeInfo.Num]
 	if !exists {
-		n.Node.NodeList.nodes[nodeInfo.Num] = NewNode(nodeInfo)
+		n.NodeList.nodes[nodeInfo.Num] = NewNode(nodeInfo)
 	} else {
 		relevantNode.Update(nodeInfo)
 	}
@@ -135,8 +136,18 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 
 	payload := meshPacket.GetDecoded().GetPayload()
 
-	toNode := n.Node.NodeList.nodes[meshPacket.To]
-	fromNode := n.Node.NodeList.nodes[meshPacket.From]
+	toNode := n.NodeList.nodes[meshPacket.To]
+	fromNode := n.NodeList.nodes[meshPacket.From]
+
+	if fromNode == nil {
+		// If the sending node is not in our node list yet, just add it.
+		fromNode = NewNode(&meshtastic.NodeInfo{
+			Num:       meshPacket.From,
+			LastHeard: meshPacket.RxTime,
+		})
+		n.NodeList.nodes[meshPacket.From] = fromNode
+	}
+
 	fromNode.HopsAway = hops
 	if hops == 0 {
 		// Assumption: the packet RxSnr is the signal quality of the received
