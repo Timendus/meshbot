@@ -43,7 +43,7 @@ func NewNeighbourList(nodelist *nodeList, timestamp uint32, neighbors []*meshtas
 func (nl NeighborList) String() string {
 	nodes := ""
 	for _, node := range nl {
-		nodes += "   - " + node.String() + "\n"
+		nodes += "\n   - " + node.String()
 	}
 	return nodes
 }

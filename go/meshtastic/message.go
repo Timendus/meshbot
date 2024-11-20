@@ -82,6 +82,10 @@ func (m *Message) ReplyBlocking(message string) chan bool {
 func (m *Message) String() string {
 	direction := m.FromNode.String() + " -> " + m.ToNode.String()
 
+	if m.MessageType == MESSAGE_TYPE_NEIGHBOR_INFO {
+		return fmt.Sprintf("%s: \033[1mNeighbor list:\033[0m %s %s", direction, m.radioMetricsString(), m.FromNode.Neighbors.String())
+	}
+
 	var content string
 	if m.MessageType == MESSAGE_TYPE_TEXT_MESSAGE {
 		content = m.Text
