@@ -53,7 +53,7 @@ func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
 
 func (n *ConnectedNode) Close() error {
 	n.Connected = false
-	NodeEvents.publish("node-disconnected", *n)
+	NodeEvents.publish("disconnected", *n)
 	return n.stream.Close()
 }
 
@@ -85,7 +85,7 @@ func (n *ConnectedNode) ReadMessages(stream io.ReadCloser) error {
 		switch packet.PayloadVariant.(type) {
 		case *meshtastic.FromRadio_ConfigCompleteId:
 			n.Connected = true
-			NodeEvents.publish("node-connected", *n)
+			NodeEvents.publish("connected", *n)
 		case *meshtastic.FromRadio_MyInfo:
 			n.Node.Id = packet.GetMyInfo().MyNodeNum
 			n.Node.NodeList.nodes[n.Node.Id] = n.Node
@@ -153,6 +153,8 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		HopsAway:      hops,
 	}
 
+	fromNode.ReceivedMessages = append(fromNode.ReceivedMessages, &message)
+
 	switch meshPacket.GetDecoded().Portnum {
 	case meshtastic.PortNum_NODEINFO_APP:
 		result := meshtastic.User{}
@@ -168,6 +170,7 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		fromNode.IsLicensed = result.IsLicensed
 		fromNode.PublicKey = result.PublicKey
 		message.MessageType = MESSAGE_TYPE_NODE_INFO
+		MessageEvents.publish("node info", message)
 
 	case meshtastic.PortNum_TELEMETRY_APP:
 		result := meshtastic.Telemetry{}
@@ -180,24 +183,31 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		case *meshtastic.Telemetry_DeviceMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_DEVICE
 			message.DeviceMetrics = result.GetDeviceMetrics()
+			MessageEvents.publish("device telemetry", message)
 		case *meshtastic.Telemetry_EnvironmentMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_ENVIRONMENT
 			message.EnvironmentMetrics = result.GetEnvironmentMetrics()
+			MessageEvents.publish("environment telemetry", message)
 		case *meshtastic.Telemetry_HealthMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_HEALTH
 			message.HealthMetrics = result.GetHealthMetrics()
+			MessageEvents.publish("health telemetry", message)
 		case *meshtastic.Telemetry_AirQualityMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_AIR_QUALITY
 			message.AirQualityMetrics = result.GetAirQualityMetrics()
+			MessageEvents.publish("air quality telemetry", message)
 		case *meshtastic.Telemetry_PowerMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_POWER
 			message.PowerMetrics = result.GetPowerMetrics()
+			MessageEvents.publish("power telemetry", message)
 		case *meshtastic.Telemetry_LocalStats:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_LOCAL_STATS
 			message.LocalStats = result.GetLocalStats()
+			MessageEvents.publish("local stats telemetry", message)
 		default:
 			log.Println("Warning: Unknown telemetry variant:", result.String())
 		}
+		MessageEvents.publish("telemetry", message)
 
 	case meshtastic.PortNum_POSITION_APP:
 		result := meshtastic.Position{}
@@ -208,6 +218,7 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		}
 		message.MessageType = MESSAGE_TYPE_POSITION
 		message.Position = NewPosition(&result)
+		MessageEvents.publish("position", message)
 
 	case meshtastic.PortNum_NEIGHBORINFO_APP:
 		result := meshtastic.NeighborInfo{}
@@ -218,21 +229,22 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		}
 		message.MessageType = MESSAGE_TYPE_NEIGHBOR_INFO
 		message.NeighborInfo = &result
+		MessageEvents.publish("neighbor info", message)
 
 	case meshtastic.PortNum_TEXT_MESSAGE_APP:
 		message.MessageType = MESSAGE_TYPE_TEXT_MESSAGE
 		message.Text = string(payload)
+		MessageEvents.publish("text message", message)
 
 	case meshtastic.PortNum_ROUTING_APP:
 		if meshPacket.GetDecoded() != nil {
 			log.Println("Ack for message with ID", meshPacket.GetDecoded().RequestId, "from", fromNode.String())
 		}
-		return
+		MessageEvents.publish("routing", message)
 
 	default:
 		log.Println("Warning: Unknown mesh packet:", meshPacket.String())
 	}
 
-	fromNode.ReceivedMessages = append(fromNode.ReceivedMessages, &message)
-	MessageEvents.publish("all-messages", message)
+	MessageEvents.publish("any", message)
 }

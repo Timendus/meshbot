@@ -16,8 +16,9 @@ import (
 func main() {
 	log.Println("Starting Meshed Potatoes!")
 
-	meshtastic.MessageEvents.Subscribe("all-messages", message)
-	meshtastic.NodeEvents.Subscribe("node-connected", connected)
+	meshtastic.MessageEvents.Subscribe("any", message)
+	meshtastic.NodeEvents.Subscribe("connected", connected)
+	meshtastic.NodeEvents.Subscribe("disconnected", disconnected)
 
 	// Attempt to auto-detect Meshtestic device on a serial port. Otherwise,
 	// connect over TCP.
@@ -74,6 +75,10 @@ func connected(node meshtastic.ConnectedNode) {
 	for _, channel := range node.Channels {
 		log.Println("   " + channel.String())
 	}
+}
+
+func disconnected(node meshtastic.ConnectedNode) {
+	log.Println("Disconnected from the node. Maybe some retry-logic here?")
 }
 
 func message(message meshtastic.Message) {
