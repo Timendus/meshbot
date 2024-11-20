@@ -2,7 +2,6 @@ package meshtastic
 
 import (
 	"fmt"
-	"log"
 	"math/rand/v2"
 	"time"
 
@@ -15,6 +14,7 @@ const (
 	MESSAGE_TYPE_NODE_INFO
 	MESSAGE_TYPE_POSITION
 	MESSAGE_TYPE_NEIGHBOR_INFO
+	MESSAGE_TYPE_ROUTING
 	MESSAGE_TYPE_TELEMETRY_DEVICE
 	MESSAGE_TYPE_TELEMETRY_ENVIRONMENT
 	MESSAGE_TYPE_TELEMETRY_HEALTH
@@ -45,9 +45,8 @@ type Message struct {
 	Position           *position
 }
 
-func (m *Message) Reply(message string) {
+func (m *Message) Reply(message string) uint32 {
 	id := rand.Uint32()
-	log.Println("Sending message with ID", id)
 	m.ReceivingNode.SendMessage(meshtastic.ToRadio_Packet{
 		Packet: &meshtastic.MeshPacket{
 			Id:       id,
@@ -69,6 +68,14 @@ func (m *Message) Reply(message string) {
 			},
 		},
 	})
+	return id
+}
+
+func (m *Message) ReplyBlocking(message string) chan bool {
+	ch := make(chan bool)
+	id := m.Reply(message)
+	m.ReceivingNode.Acks[id] = ch
+	return ch
 }
 
 func (m *Message) String() string {
@@ -92,6 +99,8 @@ func (m *Message) typeString() string {
 		return "position"
 	case MESSAGE_TYPE_NEIGHBOR_INFO:
 		return "neighbor info"
+	case MESSAGE_TYPE_ROUTING:
+		return "routing"
 	case MESSAGE_TYPE_TELEMETRY_DEVICE:
 		return "device telemetry"
 	case MESSAGE_TYPE_TELEMETRY_ENVIRONMENT:

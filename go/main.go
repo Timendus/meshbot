@@ -17,6 +17,7 @@ func main() {
 	log.Println("Starting Meshed Potatoes!")
 
 	meshtastic.MessageEvents.Subscribe("any", message)
+	meshtastic.MessageEvents.Subscribe("text message", textMessage)
 	meshtastic.NodeEvents.Subscribe("connected", connected)
 	meshtastic.NodeEvents.Subscribe("disconnected", disconnected)
 
@@ -83,8 +84,12 @@ func disconnected(node meshtastic.ConnectedNode) {
 
 func message(message meshtastic.Message) {
 	fmt.Println(message.String())
+}
 
-	if message.ToNode.Id != meshtastic.Broadcast.Id {
-		message.Reply("Hello, world!")
+func textMessage(message meshtastic.Message) {
+	if message.ToNode.Id != meshtastic.Broadcast.Id && message.FromNode.Id == 0x56598860 {
+		log.Println("Sending message and waiting...")
+		<-message.ReplyBlocking("Hello, world!")
+		log.Println("Process unblocked!")
 	}
 }

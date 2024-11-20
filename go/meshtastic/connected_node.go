@@ -15,6 +15,7 @@ type ConnectedNode struct {
 	FirmwareVersion string
 	Channels        []channel
 	Node            *Node
+	Acks            map[uint32]chan bool
 }
 
 func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
@@ -22,6 +23,7 @@ func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
 	newNode := ConnectedNode{
 		stream:    stream,
 		Connected: false,
+		Acks:      make(map[uint32]chan bool),
 		Node: &Node{
 			ShortName: "UNKN",
 			LongName:  "Unknown node",
@@ -238,8 +240,12 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 
 	case meshtastic.PortNum_ROUTING_APP:
 		if meshPacket.GetDecoded() != nil {
-			log.Println("Ack for message with ID", meshPacket.GetDecoded().RequestId, "from", fromNode.String())
+			messageId := meshPacket.GetDecoded().RequestId
+			if n.Acks[messageId] != nil {
+				n.Acks[messageId] <- true
+			}
 		}
+		message.MessageType = MESSAGE_TYPE_ROUTING
 		MessageEvents.publish("routing", message)
 
 	default:
