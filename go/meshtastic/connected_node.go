@@ -258,6 +258,7 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 			messageId := meshPacket.GetDecoded().RequestId
 			if n.Acks[messageId] != nil {
 				n.Acks[messageId] <- true
+				delete(n.Acks, messageId)
 			}
 		}
 		message.MessageType = MESSAGE_TYPE_ROUTING

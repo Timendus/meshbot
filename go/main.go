@@ -89,7 +89,11 @@ func message(message meshtastic.Message) {
 func textMessage(message meshtastic.Message) {
 	if message.ToNode.Id != meshtastic.Broadcast.Id && message.FromNode.Id == 0x56598860 {
 		log.Println("Sending message and waiting...")
-		<-message.ReplyBlocking("Hello, world!")
-		log.Println("Process unblocked!")
+		delivered := <-message.ReplyBlocking("Hello, world!", 10*time.Second)
+		if delivered {
+			log.Println("Message delivered!")
+		} else {
+			log.Println("No delivery confirmation received within 10 seconds :(")
+		}
 	}
 }

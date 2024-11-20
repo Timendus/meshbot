@@ -72,10 +72,15 @@ func (m *Message) Reply(message string) uint32 {
 	return id
 }
 
-func (m *Message) ReplyBlocking(message string) chan bool {
+func (m *Message) ReplyBlocking(message string, timeout time.Duration) chan bool {
 	ch := make(chan bool)
 	id := m.Reply(message)
 	m.ReceivingNode.Acks[id] = ch
+	go func() {
+		time.Sleep(timeout)
+		ch <- false
+		delete(m.ReceivingNode.Acks, id)
+	}()
 	return ch
 }
 
