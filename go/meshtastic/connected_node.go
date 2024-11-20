@@ -263,6 +263,10 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		message.MessageType = MESSAGE_TYPE_ROUTING
 		MessageEvents.publish("routing", message)
 
+	case meshtastic.PortNum_TRACEROUTE_APP:
+		message.MessageType = MESSAGE_TYPE_TRACEROUTE
+		MessageEvents.publish("traceroute", message)
+
 	default:
 		log.Println("Warning: Unknown mesh packet:", meshPacket.String())
 	}

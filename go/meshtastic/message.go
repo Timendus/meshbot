@@ -10,18 +10,19 @@ import (
 )
 
 const (
-	MESSAGE_TYPE_TEXT_MESSAGE = iota
-	MESSAGE_TYPE_NODE_INFO
-	MESSAGE_TYPE_POSITION
-	MESSAGE_TYPE_NEIGHBOR_INFO
-	MESSAGE_TYPE_ROUTING
-	MESSAGE_TYPE_TELEMETRY_DEVICE
-	MESSAGE_TYPE_TELEMETRY_ENVIRONMENT
-	MESSAGE_TYPE_TELEMETRY_HEALTH
-	MESSAGE_TYPE_TELEMETRY_AIR_QUALITY
-	MESSAGE_TYPE_TELEMETRY_POWER
-	MESSAGE_TYPE_TELEMETRY_LOCAL_STATS
-	MESSAGE_TYPE_OTHER
+	MESSAGE_TYPE_TEXT_MESSAGE          = "text message"
+	MESSAGE_TYPE_NODE_INFO             = "node info"
+	MESSAGE_TYPE_POSITION              = "position"
+	MESSAGE_TYPE_NEIGHBOR_INFO         = "neighbor info"
+	MESSAGE_TYPE_ROUTING               = "routing"
+	MESSAGE_TYPE_TRACEROUTE            = "traceroute"
+	MESSAGE_TYPE_TELEMETRY_DEVICE      = "device telemetry"
+	MESSAGE_TYPE_TELEMETRY_ENVIRONMENT = "environment telemetry"
+	MESSAGE_TYPE_TELEMETRY_HEALTH      = "health telemetry"
+	MESSAGE_TYPE_TELEMETRY_AIR_QUALITY = "air quality telemetry"
+	MESSAGE_TYPE_TELEMETRY_POWER       = "power telemetry"
+	MESSAGE_TYPE_TELEMETRY_LOCAL_STATS = "local stats telemetry"
+	MESSAGE_TYPE_OTHER                 = "other"
 )
 
 type Message struct {
@@ -33,7 +34,7 @@ type Message struct {
 	Snr       float32
 	HopsAway  uint32
 
-	MessageType        int
+	MessageType        string
 	Text               string
 	DeviceMetrics      *meshtastic.DeviceMetrics
 	EnvironmentMetrics *meshtastic.EnvironmentMetrics
@@ -85,37 +86,10 @@ func (m *Message) String() string {
 	if m.MessageType == MESSAGE_TYPE_TEXT_MESSAGE {
 		content = m.Text
 	} else {
-		content = "\033[1m" + m.typeString() + " packet\033[0m"
+		content = "\033[1m" + m.MessageType + " packet\033[0m"
 	}
 
 	return fmt.Sprintf("%s: %s %s", direction, content, m.radioMetricsString())
-}
-
-func (m *Message) typeString() string {
-	switch m.MessageType {
-	case MESSAGE_TYPE_TEXT_MESSAGE:
-		return "text message"
-	case MESSAGE_TYPE_POSITION:
-		return "position"
-	case MESSAGE_TYPE_NEIGHBOR_INFO:
-		return "neighbor info"
-	case MESSAGE_TYPE_ROUTING:
-		return "routing"
-	case MESSAGE_TYPE_TELEMETRY_DEVICE:
-		return "device telemetry"
-	case MESSAGE_TYPE_TELEMETRY_ENVIRONMENT:
-		return "environment telemetry"
-	case MESSAGE_TYPE_TELEMETRY_HEALTH:
-		return "health telemetry"
-	case MESSAGE_TYPE_TELEMETRY_AIR_QUALITY:
-		return "air quality telemetry"
-	case MESSAGE_TYPE_TELEMETRY_POWER:
-		return "power telemetry"
-	case MESSAGE_TYPE_TELEMETRY_LOCAL_STATS:
-		return "local stats telemetry"
-	default:
-		return "other"
-	}
 }
 
 func (m *Message) radioMetricsString() string {
