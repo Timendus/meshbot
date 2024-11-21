@@ -28,7 +28,7 @@ func main() {
 
 	ports, err := serial.GetPortsList()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	if len(ports) > 0 {
