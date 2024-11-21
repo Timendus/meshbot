@@ -1,4 +1,4 @@
-package meshtastic
+package meshwrapper
 
 import (
 	"cmp"

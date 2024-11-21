@@ -1,4 +1,4 @@
-package meshtastic
+package meshwrapper
 
 import (
 	"io"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"buf.build/gen/go/meshtastic/protobufs/protocolbuffers/go/meshtastic"
-	"github.com/timendus/meshbot/meshtastic/helpers"
+	"github.com/timendus/meshbot/meshwrapper/helpers"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -1,4 +1,4 @@
-package meshtastic
+package meshwrapper
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 
 	"buf.build/gen/go/meshtastic/protobufs/protocolbuffers/go/meshtastic"
-	"github.com/timendus/meshbot/meshtastic/helpers"
+	"github.com/timendus/meshbot/meshwrapper/helpers"
 )
 
 type Node struct {

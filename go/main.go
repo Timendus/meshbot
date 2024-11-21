@@ -9,22 +9,22 @@ import (
 	"net"
 	"time"
 
-	"github.com/timendus/meshbot/meshtastic"
+	m "github.com/timendus/meshbot/meshwrapper"
 	"go.bug.st/serial"
 )
 
 func main() {
 	log.Println("Starting Meshed Potatoes!")
 
-	meshtastic.MessageEvents.Subscribe("any", message)
-	meshtastic.MessageEvents.Subscribe("text message", textMessage)
-	meshtastic.NodeEvents.Subscribe("connected", connected)
-	meshtastic.NodeEvents.Subscribe("disconnected", disconnected)
+	m.MessageEvents.Subscribe("any", message)
+	m.MessageEvents.Subscribe("text message", textMessage)
+	m.NodeEvents.Subscribe("connected", connected)
+	m.NodeEvents.Subscribe("disconnected", disconnected)
 
 	// Attempt to auto-detect Meshtestic device on a serial port. Otherwise,
 	// connect over TCP.
 
-	var node *meshtastic.ConnectedNode
+	var node *m.ConnectedNode
 
 	ports, err := serial.GetPortsList()
 	if err != nil {
@@ -45,7 +45,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(serialPort)
+		node, err = m.NewConnectedNode(serialPort)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -55,7 +55,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		node, err = meshtastic.NewConnectedNode(tcpPort)
+		node, err = m.NewConnectedNode(tcpPort)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -68,7 +68,7 @@ func main() {
 	}
 }
 
-func connected(node meshtastic.ConnectedNode) {
+func connected(node m.ConnectedNode) {
 	log.Println("Connected to a node!")
 	log.Println("This is me: " + node.String())
 	log.Println("Node list: \n" + node.NodeList.String())
@@ -78,16 +78,16 @@ func connected(node meshtastic.ConnectedNode) {
 	}
 }
 
-func disconnected(node meshtastic.ConnectedNode) {
+func disconnected(node m.ConnectedNode) {
 	log.Println("Disconnected from the node. Maybe some retry-logic here?")
 }
 
-func message(message meshtastic.Message) {
+func message(message m.Message) {
 	fmt.Println(message.String())
 }
 
-func textMessage(message meshtastic.Message) {
-	if message.ToNode.Id != meshtastic.Broadcast.Id && message.FromNode.Id == 0x56598860 {
+func textMessage(message m.Message) {
+	if message.ToNode.Id != m.Broadcast.Id && message.FromNode.Id == 0x56598860 {
 		log.Println("Sending message and waiting...")
 		delivered := <-message.ReplyBlocking("Hello, world!", 10*time.Second)
 		if delivered {

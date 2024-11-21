@@ -1,4 +1,4 @@
-package meshtastic
+package meshwrapper
 
 type EventBody interface {
 	Message | Node | ConnectedNode
