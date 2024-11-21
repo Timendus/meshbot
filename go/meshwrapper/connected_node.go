@@ -58,7 +58,7 @@ func NewConnectedNode(stream io.ReadWriteCloser) (*ConnectedNode, error) {
 
 func (n *ConnectedNode) Close() error {
 	n.Connected = false
-	NodeEvents.publish("disconnected", *n)
+	ConnectionEvents.publish(DisconnectedEvent, *n)
 	return n.stream.Close()
 }
 
@@ -90,7 +90,7 @@ func (n *ConnectedNode) readMessages(stream io.ReadCloser) error {
 		switch packet.PayloadVariant.(type) {
 		case *meshtastic.FromRadio_ConfigCompleteId:
 			n.Connected = true
-			NodeEvents.publish("connected", *n)
+			ConnectionEvents.publish(ConnectedEvent, *n)
 		case *meshtastic.FromRadio_MyInfo:
 			n.Node.Id = packet.GetMyInfo().MyNodeNum
 			n.NodeList.nodes[n.Node.Id] = n.Node
@@ -185,7 +185,7 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		fromNode.IsLicensed = result.IsLicensed
 		fromNode.PublicKey = result.PublicKey
 		message.MessageType = MESSAGE_TYPE_NODE_INFO
-		MessageEvents.publish("node info", message)
+		MessageEvents.publish(NodeInfoEvent, message)
 
 	case meshtastic.PortNum_TELEMETRY_APP:
 		result := meshtastic.Telemetry{}
@@ -198,31 +198,31 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		case *meshtastic.Telemetry_DeviceMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_DEVICE
 			message.DeviceMetrics = result.GetDeviceMetrics()
-			MessageEvents.publish("device telemetry", message)
+			MessageEvents.publish(DeviceTelemetryEvent, message)
 		case *meshtastic.Telemetry_EnvironmentMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_ENVIRONMENT
 			message.EnvironmentMetrics = result.GetEnvironmentMetrics()
-			MessageEvents.publish("environment telemetry", message)
+			MessageEvents.publish(EnvironmentTelemetryEvent, message)
 		case *meshtastic.Telemetry_HealthMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_HEALTH
 			message.HealthMetrics = result.GetHealthMetrics()
-			MessageEvents.publish("health telemetry", message)
+			MessageEvents.publish(HealthTelemetryEvent, message)
 		case *meshtastic.Telemetry_AirQualityMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_AIR_QUALITY
 			message.AirQualityMetrics = result.GetAirQualityMetrics()
-			MessageEvents.publish("air quality telemetry", message)
+			MessageEvents.publish(AirQualityTelemetryEvent, message)
 		case *meshtastic.Telemetry_PowerMetrics:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_POWER
 			message.PowerMetrics = result.GetPowerMetrics()
-			MessageEvents.publish("power telemetry", message)
+			MessageEvents.publish(PowerTelemetryEvent, message)
 		case *meshtastic.Telemetry_LocalStats:
 			message.MessageType = MESSAGE_TYPE_TELEMETRY_LOCAL_STATS
 			message.LocalStats = result.GetLocalStats()
-			MessageEvents.publish("local stats telemetry", message)
+			MessageEvents.publish(LocalStatsTelemetryEvent, message)
 		default:
 			log.Println("Warning: Unknown telemetry variant:", result.String())
 		}
-		MessageEvents.publish("telemetry", message)
+		MessageEvents.publish(TelemetryEvent, message)
 
 	case meshtastic.PortNum_POSITION_APP:
 		result := meshtastic.Position{}
@@ -233,7 +233,7 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		}
 		message.MessageType = MESSAGE_TYPE_POSITION
 		message.Position = NewPosition(&result)
-		MessageEvents.publish("position", message)
+		MessageEvents.publish(PositionEvent, message)
 
 	case meshtastic.PortNum_NEIGHBORINFO_APP:
 		result := meshtastic.NeighborInfo{}
@@ -246,12 +246,12 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 		message.NeighborInfo = &result
 		helpers.Assert(result.NodeId == meshPacket.From, "I don't understand this format well enough: received "+message.String()+" but it has NodeId "+strconv.Itoa(int(result.NodeId)))
 		fromNode.Neighbors = NewNeighbourList(&n.NodeList, meshPacket.RxTime, result.Neighbors)
-		MessageEvents.publish("neighbor info", message)
+		MessageEvents.publish(NeighborInfoEvent, message)
 
 	case meshtastic.PortNum_TEXT_MESSAGE_APP:
 		message.MessageType = MESSAGE_TYPE_TEXT_MESSAGE
 		message.Text = string(payload)
-		MessageEvents.publish("text message", message)
+		MessageEvents.publish(TextMessageEvent, message)
 
 	case meshtastic.PortNum_ROUTING_APP:
 		if meshPacket.GetDecoded() != nil {
@@ -262,15 +262,15 @@ func (n *ConnectedNode) parseMeshPacket(meshPacket *meshtastic.MeshPacket) {
 			}
 		}
 		message.MessageType = MESSAGE_TYPE_ROUTING
-		MessageEvents.publish("routing", message)
+		MessageEvents.publish(RoutingEvent, message)
 
 	case meshtastic.PortNum_TRACEROUTE_APP:
 		message.MessageType = MESSAGE_TYPE_TRACEROUTE
-		MessageEvents.publish("traceroute", message)
+		MessageEvents.publish(TraceRouteEvent, message)
 
 	default:
 		log.Println("Warning: Unknown mesh packet:", meshPacket.String())
 	}
 
-	MessageEvents.publish("any", message)
+	MessageEvents.publish(AnyMessageEvent, message)
 }

@@ -16,10 +16,10 @@ import (
 func main() {
 	log.Println("Starting Meshed Potatoes!")
 
-	m.MessageEvents.Subscribe("any", message)
-	m.MessageEvents.Subscribe("text message", textMessage)
-	m.NodeEvents.Subscribe("connected", connected)
-	m.NodeEvents.Subscribe("disconnected", disconnected)
+	m.MessageEvents.Subscribe(m.AnyMessageEvent, message)
+	m.MessageEvents.Subscribe(m.TextMessageEvent, textMessage)
+	m.ConnectionEvents.Subscribe(m.ConnectedEvent, connected)
+	m.ConnectionEvents.Subscribe(m.DisconnectedEvent, disconnected)
 
 	// Attempt to auto-detect Meshtestic device on a serial port. Otherwise,
 	// connect over TCP.
