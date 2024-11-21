@@ -31,7 +31,7 @@ func main() {
 		log.Println(err)
 	}
 
-	if len(ports) > 0 {
+	if err == nil && len(ports) > 0 {
 		log.Printf("Found %d serial ports:\n", len(ports))
 		for i, port := range ports {
 			log.Printf("  [%d] %s\n", i, port)
