@@ -1,15 +1,13 @@
 package meshwrapper
 
-type EventBody interface {
-	Message | Node | ConnectedNode
-}
-
 type Event int
 
 const (
+	// Connection events
 	ConnectedEvent Event = iota
 	DisconnectedEvent
 
+	// Message events
 	AnyMessageEvent
 	TextMessageEvent
 	NodeInfoEvent
@@ -25,6 +23,10 @@ const (
 	PowerTelemetryEvent
 	LocalStatsTelemetryEvent
 )
+
+type EventBody interface {
+	Message | Node | ConnectedNode
+}
 
 type pubSub[T EventBody] struct {
 	subscriptions map[Event][]func(T)

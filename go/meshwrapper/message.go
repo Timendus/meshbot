@@ -23,6 +23,8 @@ const (
 	MESSAGE_TYPE_TELEMETRY_POWER       = "power telemetry"
 	MESSAGE_TYPE_TELEMETRY_LOCAL_STATS = "local stats telemetry"
 	MESSAGE_TYPE_OTHER                 = "other"
+
+	DEFAULT_BLOCKING_MESSAGE_TIMEOUT = 30 * time.Second
 )
 
 type Message struct {
@@ -48,6 +50,9 @@ type Message struct {
 
 func (m *Message) Reply(message string) uint32 {
 	id := rand.Uint32()
+	if m.ReceivingNode == nil {
+		return id
+	}
 	m.ReceivingNode.SendMessage(meshtastic.ToRadio_Packet{
 		Packet: &meshtastic.MeshPacket{
 			Id:       id,
@@ -72,12 +77,18 @@ func (m *Message) Reply(message string) uint32 {
 	return id
 }
 
-func (m *Message) ReplyBlocking(message string, timeout time.Duration) chan bool {
+func (m *Message) ReplyBlocking(message string, timeout ...time.Duration) chan bool {
+	if m.ReceivingNode == nil {
+		return nil
+	}
+	if len(timeout) == 0 {
+		timeout = []time.Duration{DEFAULT_BLOCKING_MESSAGE_TIMEOUT}
+	}
 	ch := make(chan bool)
 	id := m.Reply(message)
 	m.ReceivingNode.Acks[id] = ch
 	go func() {
-		time.Sleep(timeout)
+		time.Sleep(timeout[0])
 		ch <- false
 		delete(m.ReceivingNode.Acks, id)
 	}()
@@ -85,10 +96,24 @@ func (m *Message) ReplyBlocking(message string, timeout time.Duration) chan bool
 }
 
 func (m *Message) String() string {
-	direction := m.FromNode.String() + " -> " + m.ToNode.String()
+	direction := ""
+	if m.FromNode != nil {
+		direction += m.FromNode.String()
+	} else {
+		direction += "No node"
+	}
+	if m.ToNode != nil {
+		direction += " -> " + m.ToNode.String()
+	} else {
+		direction += " -> No node"
+	}
 
 	if m.MessageType == MESSAGE_TYPE_NEIGHBOR_INFO {
-		return fmt.Sprintf("%s: \033[1mNeighbor list:\033[0m %s %s", direction, m.radioMetricsString(), m.FromNode.Neighbors.String())
+		neighbours := "unknown"
+		if m.FromNode != nil {
+			neighbours = m.FromNode.Neighbors.String()
+		}
+		return fmt.Sprintf("%s: \033[1mNeighbor list:\033[0m %s %s", direction, m.radioMetricsString(), neighbours)
 	}
 
 	var content string
@@ -102,7 +127,7 @@ func (m *Message) String() string {
 }
 
 func (m *Message) radioMetricsString() string {
-	if m.FromNode.Connected {
+	if m.FromNode != nil && m.FromNode.Connected {
 		return ""
 	}
 
