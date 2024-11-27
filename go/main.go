@@ -9,15 +9,17 @@ import (
 	"net"
 	"time"
 
+	"github.com/timendus/meshbot/meshbot"
 	m "github.com/timendus/meshbot/meshwrapper"
 	"go.bug.st/serial"
 )
+
+var bot *meshbot.Chatbot
 
 func main() {
 	log.Println("Starting Meshed Potatoes!")
 
 	m.MessageEvents.Subscribe(m.AnyMessageEvent, message)
-	m.MessageEvents.Subscribe(m.TextMessageEvent, textMessage)
 	m.ConnectionEvents.Subscribe(m.ConnectedEvent, connected)
 	m.ConnectionEvents.Subscribe(m.DisconnectedEvent, disconnected)
 
@@ -63,6 +65,15 @@ func main() {
 
 	defer node.Close()
 
+	// Launch the chat bot
+
+	bot = meshbot.NewChatbot()
+	err = bot.ReloadPlugins()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(bot.String())
+
 	for {
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -84,16 +95,7 @@ func disconnected(node m.ConnectedNode) {
 
 func message(message m.Message) {
 	fmt.Println(message.String())
-}
-
-func textMessage(message m.Message) {
-	if message.ToNode.Id != m.Broadcast.Id && message.FromNode.Id == 0x56598860 {
-		log.Println("Sending message and waiting...")
-		delivered := <-message.ReplyBlocking("Hello, world!", 10*time.Second)
-		if delivered {
-			log.Println("Message delivered!")
-		} else {
-			log.Println("No delivery confirmation received within 10 seconds :(")
-		}
+	if bot != nil {
+		bot.HandleMessage(message)
 	}
 }

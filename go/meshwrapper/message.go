@@ -95,6 +95,10 @@ func (m *Message) ReplyBlocking(message string, timeout ...time.Duration) chan b
 	return ch
 }
 
+func (m *Message) IsPrivateMessage() bool {
+	return m.ToNode.Id != Broadcast.Id
+}
+
 func (m *Message) String() string {
 	direction := ""
 	if m.FromNode != nil {
