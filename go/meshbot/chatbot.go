@@ -29,6 +29,9 @@ func (c *Chatbot) ReloadPlugins() error {
 		return err
 	}
 	for _, entry := range entries {
+		if !strings.HasSuffix(entry.Name(), ".lua") {
+			continue
+		}
 		plugin, err := LoadPlugin("plugins/" + entry.Name())
 		if err != nil {
 			return err
@@ -75,15 +78,17 @@ func (c *Chatbot) String() string {
 }
 
 func (c *Chatbot) HandleMessage(message meshwrapper.Message) {
+	// See if we have one or more catch all handlers
+	c.handleMessageIf(message, func(cmd command, _ string) bool { return cmd.IsCatchAll })
+
 	// Messages that are not text messages can only be handled by
-	// catch all commands
+	// catch all commands, so in that case we're done here.
 	if message.MessageType != meshwrapper.MESSAGE_TYPE_TEXT_MESSAGE {
-		c.handleMessageIf(message, func(cmd command, _ string) bool { return cmd.IsCatchAll })
 		return
 	}
 
 	// See if we have one or more specific handlers for this text message
-	if c.handleMessageIf(message, c.matches) {
+	if c.handleMessageIf(message, matches) {
 		return
 	}
 
@@ -92,12 +97,13 @@ func (c *Chatbot) HandleMessage(message meshwrapper.Message) {
 }
 
 func (c *Chatbot) handleMessageIf(message meshwrapper.Message, comp func(command, string) bool) bool {
+	isPrivateMessage := message.IsPrivateMessage()
 	matchFound := false
 	for _, plugin := range c.plugins {
 		for _, command := range plugin.Commands {
 			validCommand := command.State == c.state &&
-				(command.Private == message.IsPrivateMessage() ||
-					command.Channel == !message.IsPrivateMessage())
+				(command.Private == isPrivateMessage ||
+					command.Channel == !isPrivateMessage)
 			if validCommand && comp(command, message.Text) {
 				matchFound = true
 				newState, err := command.Function(&message)
@@ -112,7 +118,7 @@ func (c *Chatbot) handleMessageIf(message meshwrapper.Message, comp func(command
 	return matchFound
 }
 
-func (c *Chatbot) matches(command command, message string) bool {
+func matches(command command, message string) bool {
 	for _, command := range command.Command {
 		if strings.EqualFold(strings.TrimSpace(message), strings.TrimSpace(command)) {
 			return true

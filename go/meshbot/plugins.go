@@ -2,6 +2,7 @@ package meshbot
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/timendus/meshbot/meshwrapper"
@@ -44,7 +45,10 @@ func LoadPlugin(filename string) (*plugin, error) {
 	if err := L.DoFile(filename); err != nil {
 		return nil, err
 	}
-	definition := L.GetGlobal("plugin").(*lua.LTable)
+	definition, ok := L.GetGlobal("plugin").(*lua.LTable)
+	if !ok {
+		return nil, errors.New("no plugin definition found in file " + filename)
+	}
 	return newPlugin(definition, L), nil
 }
 
