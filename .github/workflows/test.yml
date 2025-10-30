@@ -1,0 +1,98 @@
+name: Test and build Meshbot
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name for the release (e.g., v1.2.3)"
+        required: true
+        default: ""
+
+permissions:
+  contents: write   # required to create releases & upload assets
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [ '1.24.x' ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Run tests
+        run: make test
+
+  build:
+    name: Build binaries
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [ '1.24.x' ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Build the application
+        run: make build
+
+      - name: Upload Linux binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshbot-linux
+          path: ./dist/linux/*
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshbot-windows
+          path: ./dist/windows/*
+      - name: Upload Raspberry Pi binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshbot-raspberry-pi
+          path: ./dist/raspberry-pi/*
+      - name: Upload MacOS Intel binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshbot-macos-intel
+          path: ./dist/macos-intel/*
+      - name: Upload MacOS Apple Silicon binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshbot-macos-apple-silicon
+          path: ./dist/macos-apple-silicon/*
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshbot-docker-image
+          path: ./dist/docker/*
+      
+      - name: Collect all build artifacts for release
+        uses: actions/download-artifact@v4
+        if: github.event.inputs.tag != ''
+        with:
+          pattern: meshbot-*
+          merge-multiple: true
+          path: release_assets
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        if: github.event.inputs.tag != ''
+        with:
+          draft: true
+          tag_name: github.event.inputs.tag
+          generate_release_notes: true
+          files: |
+            release_assets/*

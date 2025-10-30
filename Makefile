@@ -2,21 +2,35 @@ SHELL := /bin/bash
 
 all: run
 
-build:
-	@echo "Building docker image..."
-	@docker build -t timendus/meshbot .
-
-run-image:
-	@echo "Running as a docker image..."
-	@docker run --name=meshbot -d timendus/meshbot
-
-export-image: build
-	@echo "Exporting docker image..."
-	@docker save timendus/meshbot:latest | gzip > meshbot-docker-image.tar.gz
-
-dependencies:
-	@python3 -m venv .venv
-	@.venv/bin/pip3 install -r requirements.txt
+update:
+	@go get -u
+	@go mod tidy
 
 run:
-	@.venv/bin/python3 -m meshbot
+	@go run *.go
+
+test:
+	@go test -v ./...
+
+lines:
+	@find . -name '*.go' | xargs wc -l
+
+build:
+	@GOOS=linux GOARCH=amd64 go build -o dist/linux/meshbot *.go
+	@cp config.json dist/linux/
+
+	@GOOS=windows GOARCH=amd64 go build -o dist/windows/meshbot.exe *.go
+	@cp config.json dist/windows/
+
+	@GOOS=linux GOARCH=arm64 go build -o dist/raspberry-pi/meshbot *.go
+	@cp config.json dist/raspberry-pi/
+
+	@GOOS=darwin GOARCH=amd64 go build -o dist/macos-intel/meshbot *.go
+	@cp config.json dist/macos-intel/
+
+	@GOOS=darwin GOARCH=arm64 go build -o dist/macos-apple-silicon/meshbot *.go
+	@cp config.json dist/macos-apple-silicon/
+
+	@docker build --quiet -t timendus/meshbot:latest .
+	@mkdir -p dist/docker
+	@docker save timendus/meshbot:latest | gzip > dist/docker/meshbot.tar.gz

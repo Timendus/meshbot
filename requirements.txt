@@ -1,3 +1,0 @@
-python-dotenv
-pytap2
-meshtastic
